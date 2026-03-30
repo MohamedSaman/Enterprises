@@ -335,8 +335,8 @@
         }
 
         .sidebar-header {
-            padding: 0 20px 20px;
-            margin-bottom: 15px;
+            padding: 0;
+            margin-bottom: 0;
         }
 
         .sidebar-title {
@@ -847,7 +847,7 @@
         <div class="sidebar">
             <div class="sidebar-header d-flex justify-content-center">
                 <div class="sidebar-title">
-                    <img src="{{ asset('images/logo.png') }}" alt="{{ config('shop.name') }}" width="160">
+                    <img src="{{ asset('images/logo.png') }}" alt="{{ config('shop.name') }}" width="180">
                 </div>
             </div>
             <ul class="nav flex-column">
