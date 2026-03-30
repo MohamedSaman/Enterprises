@@ -23,9 +23,14 @@
 
         :root {
             --phoenix-black: #050505;
-            --phoenix-gold: #d4a63d;
-            --phoenix-gold-dark: #8a6114;
-            --phoenix-gold-soft: #f2dfb0;
+            --phoenix-primary: #1296A5;
+            --phoenix-primary-dark: #0e6e7a;
+            --phoenix-accent: #FF914D;
+            --phoenix-accent-dark: #d46a00;
+            --phoenix-accent-soft: #ffe3d0;
+            --phoenix-gold: #FF914D;
+            --phoenix-gold-dark: #d46a00;
+            --phoenix-gold-soft: #ffe3d0;
         }
 
         /* Full-screen page */
@@ -66,7 +71,7 @@
         /* Left branding panel */
         .brand-panel {
             flex: 1 1 42%;
-            background: linear-gradient(160deg, #050505 0%, #1a1a1a 45%, #8a6114 100%);
+            background: linear-gradient(160deg, var(--phoenix-black) 0%, #1296A5 45%, var(--phoenix-accent) 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -76,7 +81,7 @@
         }
 
         .brand-panel img.brand-logo {
-            height: 88px;
+            height: 165px;
             width: auto;
             object-fit: contain;
             margin-bottom: 20px;
@@ -89,10 +94,11 @@
             font-weight: 800;
             margin: 0 0 8px;
             letter-spacing: -0.02em;
+            text-shadow: 0 2px 8px rgba(18,150,165,0.10);
         }
 
         .brand-panel .brand-tagline {
-            color: var(--phoenix-gold-soft);
+            color: var(--phoenix-accent-soft);
             font-size: 0.78rem;
             letter-spacing: 0.04em;
             text-transform: uppercase;
@@ -120,7 +126,7 @@
 
         .brand-meta i {
             margin-right: 6px;
-            color: var(--phoenix-gold);
+            color: var(--phoenix-accent);
         }
 
         .brand-connect {
@@ -145,7 +151,7 @@
         }
 
         .connect-icon.email {
-            background: #e84b3c;
+            background: var(--phoenix-accent);
         }
 
         .connect-icon.whatsapp {
@@ -165,6 +171,7 @@
             flex-direction: column;
             justify-content: center;
             padding: 56px 52px;
+            border-left: 4px solid var(--phoenix-primary);
         }
 
         .form-panel .panel-heading {
@@ -175,8 +182,8 @@
             width: 64px;
             height: 64px;
             border-radius: 50%;
-            background: #fff8e6;
-            border: 2px solid #efd18d;
+            background: #e6fafd;
+            border: 2px solid var(--phoenix-primary);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -185,7 +192,7 @@
 
         .form-panel .panel-heading .user-ring i {
             font-size: 2rem;
-            color: var(--phoenix-gold-dark);
+            color: var(--phoenix-primary);
         }
 
         .form-panel .panel-heading h2 {
@@ -230,8 +237,8 @@
 
         .input-wrap .form-control:focus {
             outline: none;
-            border-color: var(--phoenix-gold);
-            box-shadow: 0 0 0 3px rgba(212, 166, 61, 0.22);
+            border-color: var(--phoenix-primary);
+            box-shadow: 0 0 0 3px rgba(18, 150, 165, 0.18);
             background: #fff;
         }
 
@@ -279,7 +286,7 @@
         }
 
         .forgot-link {
-            color: var(--phoenix-gold-dark);
+            color: var(--phoenix-primary);
             text-decoration: none;
             font-weight: 500;
         }
@@ -292,7 +299,7 @@
             width: 100%;
             padding: 14px;
             border-radius: 10px;
-            background: linear-gradient(135deg, var(--phoenix-gold-dark), var(--phoenix-gold));
+            background: linear-gradient(135deg, var(--phoenix-primary), var(--phoenix-accent));
             border: none;
             color: #fff;
             font-size: 1rem;
@@ -300,7 +307,7 @@
             letter-spacing: 0.02em;
             cursor: pointer;
             transition: filter 0.2s, transform 0.15s;
-            box-shadow: 0 4px 18px rgba(138, 97, 20, 0.35);
+            box-shadow: 0 4px 18px rgba(18, 150, 165, 0.18);
         }
 
         .login-btn:hover {

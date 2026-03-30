@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 :root {
-    --phoenix-primary: #0f766e;
-    --phoenix-primary-dark: #115e59;
-    --phoenix-accent: #f59e0b;
+    --phoenix-primary: #1296A5;
+    --phoenix-primary-dark: #0e6e7a;
+    --phoenix-accent: #FF914D;
     --phoenix-bg: #f6fbfa;
-    --phoenix-text: #0f172a;
+    --phoenix-text: #050505;
     --phoenix-muted: #64748b;
 }
 

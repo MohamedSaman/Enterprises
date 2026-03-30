@@ -33,12 +33,12 @@
 <body class="font-sans antialiased">
     <x-banner />
 
-    <div class="min-h-screen" style="background: radial-gradient(circle at top right, #d9f4ef 0, #f6fbfa 45%, #f8fafc 100%);">
+    <div class="min-h-screen" style="background: radial-gradient(circle at top right, #e6fafd 0, #f6fbfa 45%, #f8fafc 100%);">
         @livewire('navigation-menu')
 
         <!-- Page Heading -->
         @if (isset($header))
-        <header class="bg-white/95 shadow-sm border-b border-teal-100">
+        <header class="bg-white/95 shadow-sm border-b" style="border-color: #1296A5;">
             <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                 {{ $header }}
             </div>
