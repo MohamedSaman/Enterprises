@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 
 class DaySummary extends Component
 {
+    protected $listeners = ['refreshPage' => '$refresh'];
     use WithPagination;
     use WithDynamicLayout;
 

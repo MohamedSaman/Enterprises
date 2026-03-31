@@ -17,6 +17,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 #[\Livewire\Attributes\Title('Quotation Management')]
 class QuotationList extends Component
 {
+    protected $listeners = ['refreshPage' => '$refresh'];
     use WithDynamicLayout;
     use WithPagination;
     // Do not store paginator in a public property (Livewire cannot serialize it)

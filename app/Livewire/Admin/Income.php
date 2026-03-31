@@ -17,6 +17,7 @@ use App\Models\PurchasePayment;
 #[Title("Deposit By Cash")]
 class Income extends Component
 {
+    protected $listeners = ['refreshPage' => '$refresh'];
     use WithDynamicLayout, WithPagination;
 
     protected $paginationTheme = 'bootstrap';

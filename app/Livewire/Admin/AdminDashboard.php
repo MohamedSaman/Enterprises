@@ -16,6 +16,8 @@ class AdminDashboard extends Component
 {
     use WithDynamicLayout;
 
+    protected $listeners = ['refreshPage' => 'refreshDashboard'];
+
     public $totalRevenue = 0;
     public $totalDueAmount = 0;
     public $totalSales = 0;
@@ -38,6 +40,10 @@ class AdminDashboard extends Component
     public $damagedValue = 0;
     public $totalInventoryValue = 0;
     public $totalAvailableInventory = 0;
+        public function refreshDashboard()
+        {
+            $this->mount();
+        }
     public $totalStaffCount = 0;
     public $staffWithAssignmentsCount = 0;
     public $staffAssignmentPercentage = 0;

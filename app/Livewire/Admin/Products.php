@@ -34,6 +34,7 @@ use App\Livewire\Concerns\WithDynamicLayout;
 #[Title("Product List")]
 class Products extends Component
 {
+    protected $listeners = ['refreshPage' => '$refresh'];
     use WithDynamicLayout;
 
     use WithPagination, WithFileUploads;

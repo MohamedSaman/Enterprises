@@ -24,40 +24,34 @@
     <style>
         /* Theme tokens: change colors here to affect entire layout */
         :root {
-            --page-bg: #f7f4ed;
-            --surface: #ffffff;
-
-            --primary: #ffffff;
-            --primary-600: #a17013;
-            --primary-100: #d4a63d;
-            --primary-50: #f7e7bf;
-
-            --accent: #d4a63d;
-
+            --page-bg: #fff;
+            --surface: #fff;
+            --primary: #38bdf8; /* sky blue for active */
+            --primary-600: #0ea5e9;
+            --primary-100: #070707;
+            --primary-50: #e0f2fe;
+            --accent: #38bdf8;
             --muted: #6b7280;
             --muted-2: #4b5563;
             --border: #e5e7eb;
             --muted-3: #d1d5db;
-
             --success-bg: #d1e7dd;
             --success-text: #0f5132;
             --warning-bg: #fff3cd;
-            --warning-text: #664d03;
+            --warning-text: #1090a1;
             --danger-bg: #f8d7da;
             --danger-text: #842029;
-
-            --sidebar-bg: #050505;
-            --topbar-bg: #050505;
-
-            --text: #111827;
-
-            --avatar-bg: #111111;
-            --avatar-text: #f8fafc;
+            --sidebar-bg: #fff;
+            --topbar-bg: #fff;
+            --text: #111;
+            --avatar-bg: #e0e7ef;
+            --avatar-text: #111;
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--page-bg);
+            background-color: #fff;
+            color: #111;
             letter-spacing: -0.01em;
         }
 
@@ -71,7 +65,7 @@
 
         .theme-toggle-btn:hover,
         .theme-toggle-btn:focus {
-            background: rgba(212, 166, 61, 0.18) !important;
+            background: rgba(115, 166, 189, 0.18) !important;
             color: #ffffff !important;
         }
 
@@ -279,17 +273,15 @@
         .sidebar {
             width: 265px;
             height: 100vh;
-            background-color: var(--sidebar-bg);
-            color: #ffffff;
-
+            background-color: #fff;
+            color: #111;
             padding: 20px 0;
             position: fixed;
             transition: all 0.3s ease;
             z-index: 1040;
             overflow-y: auto;
-            /* Enable vertical scrolling */
             overflow-x: hidden;
-            /* Hide horizontal overflow */
+            border-right: 1px solid var(--border);
         }
 
         /* Add custom scrollbar styling for sidebar */
@@ -342,7 +334,7 @@
         .sidebar-title {
             font-weight: 600;
             font-size: 1.2rem;
-            color: #ffffff;
+            color: #111;
             letter-spacing: -0.02em;
         }
 
@@ -353,23 +345,25 @@
         }
 
         .nav-link {
-            color: #fff;
+            color: #111;
             padding: 8px 20px;
             transition: all 0.2s;
+            border-radius: 6px;
         }
 
 
         .nav-link.active {
-            background: linear-gradient(135deg, #8a6114 0%, #d4a63d 100%);
-            color: var(--primary);
-            font-weight: 500;
+            background: var(--primary);
+            color: #fff !important;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(56,189,248,0.08);
         }
 
         .nav-link:focus,
         .nav-link:hover,
         .nav-link:focus-visible {
-            color: #fff;
-
+            color: var(--primary);
+            background: var(--primary-50);
             outline: none;
         }
 
@@ -533,10 +527,11 @@
             margin-left: 260px;
             margin-top: 60px;
             padding: 20px;
-            background-color: #fffaf0;
+            background-color: #fff;
             min-height: calc(100vh - 60px);
             width: calc(100% - 250px);
             transition: all 0.3s ease;
+            color: #111;
         }
 
 
@@ -549,12 +544,13 @@
         /* Card styles */
         .stat-card,
         .widget-container {
-            background: var(--surface);
+            background: #fff;
             border-radius: 10px;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-            border: none;
+            border: 1px solid var(--border);
             padding: 1.25rem;
             height: 100%;
+            color: #111;
         }
 
         .stat-value {
@@ -565,7 +561,7 @@
         }
 
         .stat-label {
-            color: var(--muted);
+            color: #111;
             font-size: 0.875rem;
             font-weight: 500;
             margin-bottom: 5px;
@@ -661,13 +657,13 @@
             font-size: 1.25rem;
             margin-bottom: 5px;
             font-weight: 600;
-            color: var(--text);
+            color: #111;
             letter-spacing: -0.02em;
         }
 
         .widget-header p {
             font-size: 0.875rem;
-            color: var(--muted-2);
+            color: #444;
             margin-bottom: 0;
         }
 
@@ -686,12 +682,12 @@
         .item-details h6 {
             font-size: 1rem;
             margin-bottom: 3px;
-            color: var(--text);
+            color: #111;
         }
 
         .item-details p {
             font-size: 0.875rem;
-            color: var(--muted);
+            color: #444;
             margin-bottom: 0;
         }
 
@@ -785,20 +781,20 @@
             border-top: none;
             font-weight: 600;
             color: #ffffff;
-            background: linear-gradient(135deg, #8a6114 0%, #d4a63d 100%);
-            font-size: 0.85rem;
+            background: linear-gradient(135deg, #79b4cf 0%, #d4a63d 100%);
+            font-size: 0.85rem;79b4cf
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .btn {
-            background: linear-gradient(135deg, #d4a63d 0%, #8a6114 100%);
+            background: linear-gradient(135deg, #d4a63d 0%, #79b4cf 100%);
             color: #ffffff;
             border: none;
         }
 
         .modal-header {
-            background: linear-gradient(135deg, #8a6114 0%, #d4a63d 100%);
+            background: linear-gradient(135deg, #79b4cf 0%, #d4bd3d 100%);
             color: #ffffff;
         }
 

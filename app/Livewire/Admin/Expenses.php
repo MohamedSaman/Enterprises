@@ -17,6 +17,7 @@ use App\Livewire\Concerns\WithDynamicLayout;
 #[Title("Expenses")]
 class Expenses extends Component
 {
+    protected $listeners = ['refreshPage' => '$refresh'];
     use WithDynamicLayout;
 
     // Data variables

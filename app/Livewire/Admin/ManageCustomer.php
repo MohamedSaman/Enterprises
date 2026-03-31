@@ -13,6 +13,7 @@ use App\Livewire\Concerns\WithDynamicLayout;
 #[Title('Manage Customer')]
 class ManageCustomer extends Component
 {
+    protected $listeners = ['refreshPage' => '$refresh'];
     use WithDynamicLayout, WithPagination;
 
     public $name;
