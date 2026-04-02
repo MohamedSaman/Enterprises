@@ -14,7 +14,7 @@ class UpdateLivewireLayouts extends Command
     {
         $this->info('Updating Livewire components to use dynamic layouts...');
         
-        $path = app_path('Livewire/Admin');
+        $path = app_path('Livewire/Invontery/Admin');
         $files = File::allFiles($path);
         
         $updated = 0;

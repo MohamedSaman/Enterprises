@@ -14,7 +14,7 @@ class AddLayoutCalls extends Command
     {
         $this->info('Adding ->layout() calls to render methods...');
         
-        $path = app_path('Livewire/Admin');
+        $path = app_path('Livewire/Invontery/Admin');
         $files = File::allFiles($path);
         
         $updated = 0;

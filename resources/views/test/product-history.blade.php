@@ -89,22 +89,22 @@
                 <div class="tab-content p-4" style="max-height: 500px; overflow-y: auto;">
                     <!-- Sales Tab -->
                     <div class="tab-pane fade show active" id="sales-tab">
-                        @include('livewire.admin.partials.sales-history')
+                        @include('livewire.invontery.admin.partials.sales-history')
                     </div>
 
                     <!-- Purchases Tab -->
                     <div class="tab-pane fade" id="purchases-tab">
-                        @include('livewire.admin.partials.purchases-history')
+                        @include('livewire.invontery.admin.partials.purchases-history')
                     </div>
 
                     <!-- Returns Tab -->
                     <div class="tab-pane fade" id="returns-tab">
-                        @include('livewire.admin.partials.returns-history')
+                        @include('livewire.invontery.admin.partials.returns-history')
                     </div>
 
                     <!-- Quotations Tab -->
                     <div class="tab-pane fade" id="quotations-tab">
-                        @include('livewire.admin.partials.quotations-history')
+                        @include('livewire.invontery.admin.partials.quotations-history')
                     </div>
                 </div>
             </div>

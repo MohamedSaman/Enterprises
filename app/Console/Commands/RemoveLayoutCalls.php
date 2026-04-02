@@ -14,7 +14,7 @@ class RemoveLayoutCalls extends Command
     {
         $this->info('Removing ->layout() calls from render methods...');
         
-        $path = app_path('Livewire/Admin');
+        $path = app_path('Livewire/Invontery/Admin');
         $files = File::allFiles($path);
         
         $updated = 0;

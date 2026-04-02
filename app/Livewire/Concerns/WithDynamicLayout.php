@@ -20,8 +20,8 @@ trait WithDynamicLayout
         $user = Auth::user();
 
         return match ($user->role) {
-            'admin' => 'components.layouts.admin',
-            'staff' => 'components.layouts.staff',
+            'admin' => 'components.layouts.invontery.admin',
+            'staff' => 'components.layouts.invontery.staff',
             default => 'components.layouts.app',
         };
     }
