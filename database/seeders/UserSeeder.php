@@ -20,6 +20,7 @@ class UserSeeder extends Seeder
             'password' => Hash::make('staff@1213'),
             'role' => 'staff',
             'contact' => '0776657107',
+            'module' => 'inventory',
         ]);
 
         // Create Admin User
@@ -29,6 +30,19 @@ class UserSeeder extends Seeder
             'password' => Hash::make('admin@1213'),
             'role' => 'admin',
             'contact' => '0717894272',
+            'module' => 'inventory',
         ]);
+
+        // Create Admin User
+        User::create([
+            'name' => 'Production Admin',
+            'email' => 'admin@production.com',
+            'password' => Hash::make('admin@1213'),
+            'role' => 'admin',
+            'contact' => '0717894272',
+            'module' => 'production',
+        ]);
+
+
     }
 }

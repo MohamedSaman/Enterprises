@@ -12,6 +12,8 @@ class PurchaseOrderItem extends Model
     protected $fillable = [
         'order_id',
         'product_id',
+        'production_material_id',
+        'size',
         'quantity',
         'received_quantity',
         'unit_price',
@@ -19,6 +21,11 @@ class PurchaseOrderItem extends Model
         'discount_type',
         'status',
     ];
+
+    public function material()
+    {
+        return $this->belongsTo(ProductionMaterial::class, 'production_material_id');
+    }
 
     public function order()
     {

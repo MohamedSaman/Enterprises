@@ -12,6 +12,7 @@ class PurchaseOrder extends Model
     protected $fillable = [
         'order_code',
         'supplier_id',
+        'order_type',
         'order_date',
         'received_date',
         'status',
@@ -44,5 +45,10 @@ class PurchaseOrder extends Model
     public function returns()
     {
         return $this->hasMany(ReturnSupplier::class, 'purchase_order_id');
+    }
+
+    public function batches()
+    {
+        return $this->hasMany(ProductionMaterialBatch::class, 'purchase_order_id');
     }
 }

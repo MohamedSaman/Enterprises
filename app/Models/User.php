@@ -77,6 +77,11 @@ class User extends Authenticatable
         return $this->hasMany(StaffPermission::class, 'user_id', 'id');
     }
 
+    public function detail()
+    {
+        return $this->hasOne(UserDetail::class, 'user_id', 'id');
+    }
+
     /**
      * Check if user has a specific permission
      * If staff has no permissions assigned, grant full access by default
