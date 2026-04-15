@@ -16,6 +16,7 @@ class ProductionBatchDay extends Model
         'produced_qty',
         'expense_amount',
         'expense_note',
+        'expense_items',
         'material_usages',
         'staff_commissions',
         'recorded_by',
@@ -23,6 +24,7 @@ class ProductionBatchDay extends Model
 
     protected $casts = [
         'work_date' => 'date',
+        'expense_items' => 'array',
         'material_usages' => 'array',
         'staff_commissions' => 'array',
         'expense_amount' => 'decimal:2',

@@ -24,6 +24,7 @@ class PurchaseOrder extends Component
     public $activeSearchIndex = null;
 
     public $showModal = false;
+    public $showSupplierCreateModal = false;
     public $showViewModal = false;
     public $material_id = null; // Added for edit functionality
     public $po_id = null; // Added for edit functionality
@@ -31,12 +32,22 @@ class PurchaseOrder extends Component
     public $order_date;
     public $items = [];
 
+    public $new_supplier_name = '';
+    public $new_supplier_businessname = '';
+    public $new_supplier_contact = '';
+    public $new_supplier_phone = '';
+    public $new_supplier_email = '';
+    public $new_supplier_address = '';
+    public $new_supplier_notes = '';
+    public $new_supplier_status = 'active';
+
     public $selectedViewPO = null;
 
     // GRN properties
     public $selectedPO = null;
     public $grnItems = [];
     public $showGRNModal = false;
+    public $batch_no = '';
 
     protected $rules = [
         'supplier_id' => 'required',
@@ -48,7 +59,7 @@ class PurchaseOrder extends Component
 
     public function mount()
     {
-        $this->suppliers = ProductSupplier::all();
+        $this->suppliers = ProductSupplier::orderBy('name')->get();
         $this->order_date = date('Y-m-d');
     }
 
@@ -72,6 +83,75 @@ class PurchaseOrder extends Component
         $this->showGRNModal = false;
         $this->selectedPO = null;
         $this->grnItems = [];
+        $this->batch_no = '';
+        $this->showSupplierCreateModal = false;
+        $this->resetSupplierCreateForm();
+    }
+
+    private function resetSupplierCreateForm(): void
+    {
+        $this->resetValidation([
+            'new_supplier_name',
+            'new_supplier_businessname',
+            'new_supplier_contact',
+            'new_supplier_phone',
+            'new_supplier_email',
+            'new_supplier_address',
+            'new_supplier_notes',
+            'new_supplier_status',
+        ]);
+
+        $this->new_supplier_name = '';
+        $this->new_supplier_businessname = '';
+        $this->new_supplier_contact = '';
+        $this->new_supplier_phone = '';
+        $this->new_supplier_email = '';
+        $this->new_supplier_address = '';
+        $this->new_supplier_notes = '';
+        $this->new_supplier_status = 'active';
+    }
+
+    public function openSupplierCreateModal(): void
+    {
+        $this->resetSupplierCreateForm();
+        $this->showSupplierCreateModal = true;
+    }
+
+    public function closeSupplierCreateModal(): void
+    {
+        $this->showSupplierCreateModal = false;
+        $this->resetSupplierCreateForm();
+    }
+
+    public function saveSupplierFromModal(): void
+    {
+        $validated = $this->validate([
+            'new_supplier_name' => 'required|string|max:255',
+            'new_supplier_businessname' => 'nullable|string|max:255',
+            'new_supplier_contact' => 'nullable|string|max:255',
+            'new_supplier_phone' => 'nullable|string|max:50',
+            'new_supplier_email' => 'nullable|email|max:255',
+            'new_supplier_address' => 'nullable|string|max:1000',
+            'new_supplier_notes' => 'nullable|string|max:1000',
+            'new_supplier_status' => 'nullable|string|max:50',
+        ]);
+
+        $supplier = ProductSupplier::create([
+            'name' => $validated['new_supplier_name'],
+            'businessname' => $validated['new_supplier_businessname'] ?: null,
+            'contact' => $validated['new_supplier_contact'] ?: null,
+            'phone' => $validated['new_supplier_phone'] ?: null,
+            'email' => $validated['new_supplier_email'] ?: null,
+            'address' => $validated['new_supplier_address'] ?: null,
+            'notes' => $validated['new_supplier_notes'] ?: null,
+            'status' => $validated['new_supplier_status'] ?: 'active',
+        ]);
+
+        $this->suppliers = ProductSupplier::orderBy('name')->get();
+        $this->supplier_id = (string) $supplier->id;
+        $this->closeSupplierCreateModal();
+
+        $this->dispatch('alert', ['message' => 'Supplier created successfully.', 'type' => 'success']);
     }
 
     public function addItem()
@@ -95,11 +175,20 @@ class PurchaseOrder extends Component
 
     public function updated($property)
     {
-        if (str_contains($property, 'items.')) {
-            foreach ($this->items as $index => $item) {
-                $this->items[$index]['total'] = (float)($item['quantity'] ?? 0) * (float)($item['unit_price'] ?? 0);
-            }
+        if (!preg_match('/^items\.(\d+)\.(quantity|unit_price)$/', $property, $matches)) {
+            return;
         }
+
+        $index = (int) $matches[1];
+
+        if (!isset($this->items[$index])) {
+            return;
+        }
+
+        $quantity = (float) ($this->items[$index]['quantity'] ?? 0);
+        $unitPrice = (float) ($this->items[$index]['unit_price'] ?? 0);
+
+        $this->items[$index]['total'] = $quantity * $unitPrice;
     }
 
     public function performSearchMaterial($index, $value)
@@ -338,7 +427,6 @@ class PurchaseOrder extends Component
                     continue;
                 }
 
-                $remainingToReceive = max(0, (float) $poItem->quantity - (float) ($poItem->received_quantity ?? 0));
                 $receivedQty = (float) ($item['received_qty'] ?? 0);
                 $costPrice = (float) ($item['cost_price'] ?? 0);
 
@@ -347,7 +435,7 @@ class PurchaseOrder extends Component
                 }
 
                 if (!($item['received'] ?? false)) {
-                    if ($remainingToReceive > 0 && ($poItem->status ?? '') === 'received') {
+                    if ((float) ($poItem->received_quantity ?? 0) > 0 && ($poItem->status ?? '') === 'received') {
                         $poItem->status = 'partial';
                         $poItem->save();
                     }
@@ -356,10 +444,6 @@ class PurchaseOrder extends Component
 
                 if ($receivedQty <= 0) {
                     continue;
-                }
-
-                if ($receivedQty > $remainingToReceive) {
-                    throw new \Exception('Received quantity cannot exceed remaining quantity for ' . ($item['name'] ?? 'an item') . '.');
                 }
 
                 $hasAnyReceipt = true;
@@ -394,7 +478,7 @@ class PurchaseOrder extends Component
                     ]);
                 }
 
-                $poItem->received_quantity = (float) ($poItem->received_quantity ?? 0) + $receivedQty;
+                $poItem->received_quantity = $receivedQty;
                 $poItem->status = $poItem->received_quantity >= (float) $poItem->quantity ? 'received' : 'partial';
                 $poItem->save();
 

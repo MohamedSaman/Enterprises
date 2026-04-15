@@ -49,7 +49,9 @@
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
                 <h4 class="fw-bold mb-1">{{ $batch->batch_code }}</h4>
-                <div class="text-muted small">Size {{ $batch->size }} | Supervisor: {{ $batch->supervisor->name ?? '-' }}</div>
+                <div class="text-muted small">
+                    Size {{ $batch->size }} | Material: {{ $batch->material->name ?? '-' }} | Supervisor: {{ $batch->supervisor->name ?? '-' }}
+                </div>
             </div>
             <div class="d-flex align-items-center gap-2">
                 <span class="summary-chip">Produced: {{ number_format($totals['produced']) }}</span>
@@ -59,6 +61,35 @@
                 @if($batch->status !== 'completed')
                 <button class="btn btn-sm btn-success" wire:click="completeBatch">Mark Completed</button>
                 @endif
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card p-4 mb-3">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="p-3 border rounded h-100 bg-light">
+                    <div class="text-muted small mb-1">Planned Material</div>
+                    <div class="fw-bold">{{ number_format((float) ($batch->planned_material_ton ?? 0), 3) }} ton</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 border rounded h-100 bg-light">
+                    <div class="text-muted small mb-1">Estimated Target</div>
+                    <div class="fw-bold">{{ number_format((int) ($batch->target_qty ?? 0)) }} pcs</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 border rounded h-100 bg-light">
+                    <div class="text-muted small mb-1">Estimated Days</div>
+                    <div class="fw-bold">{{ number_format((int) ($batch->estimated_days ?? 0)) }} days</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 border rounded h-100 bg-light">
+                    <div class="text-muted small mb-1">Workers Assigned</div>
+                    <div class="fw-bold">{{ $batch->staffMembers->count() }} workers</div>
+                </div>
             </div>
         </div>
     </div>
@@ -94,6 +125,7 @@
                                 <th class="text-end">Produced</th>
                                 <th class="text-end">Expenses</th>
                                 <th class="text-end">Commissions</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -105,11 +137,19 @@
                                 <td class="text-end">{{ number_format($day->expense_amount, 2) }}</td>
                                 <td class="text-end">
                                     {{ number_format(collect($day->staff_commissions ?? [])->sum('amount'), 2) }}
+
+                                </td>
+                                <td>
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button type="button" class="btn btn-sm btn-light" wire:click="openViewModal({{ $day->id }})">View</button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" wire:click="openEditModal({{ $day->id }})">Edit</button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" wire:click="confirmDeleteDay({{ $day->id }})">Delete</button>
+                                    </div>
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">No day logs yet.</td>
+                                <td colspan="6" class="text-center py-4 text-muted">No day logs yet.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -225,6 +265,37 @@
                         </div>
                     </div>
 
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold mb-0">Expense Lines</label>
+                            <button type="button" class="btn btn-sm btn-outline-primary" wire:click="addExpenseRow">+ Add Expense</button>
+                        </div>
+                        @foreach($expense_rows as $index => $expenseRow)
+                        <div class="row g-2 mb-2 align-items-end">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" wire:model="expense_rows.{{ $index }}.label" placeholder="Electricity, Packing, Transport">
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" class="form-control" wire:model="expense_rows.{{ $index }}.amount" min="0" step="0.01" placeholder="Amount">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" wire:model="expense_rows.{{ $index }}.note" placeholder="Note">
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-outline-danger w-100" wire:click="removeExpenseRow({{ $index }})">X</button>
+                            </div>
+                        </div>
+                        @endforeach
+                        @error('expense_rows') <span class="text-danger small d-block">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="p-3 border rounded bg-light mt-3 mb-4">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-bold">Expense Total</span>
+                            <span class="fw-bold">Rs. {{ number_format($expenseRowsTotal, 2) }}</span>
+                        </div>
+                    </div>
+
                     <div class="alert alert-info border-0 mb-4">
                         <div class="fw-bold mb-1">Commission Calculation</div>
                         <div class="small mb-1">
@@ -293,6 +364,73 @@
                 <div class="modal-footer">
                     <button class="btn btn-light" wire:click="closeDayModal">Cancel</button>
                     <button class="btn btn-primary" wire:click="saveDayLog">Save Day Log</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($showViewModal && $viewDay)
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 14px;">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Daily Log - Day {{ $viewDay->day_no }}</h5>
+                    <button type="button" class="btn-close" wire:click="closeViewModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded">Date<br><b>{{ $viewDay->work_date?->format('M d, Y') }}</b></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded">Produced<br><b>{{ number_format($viewDay->produced_qty) }}</b></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded">Total Expense<br><b>Rs. {{ number_format($viewDay->expense_amount, 2) }}</b></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="fw-bold mb-2">Expense Lines</div>
+                        <ul class="list-group">
+                            @forelse(($viewDay->expense_items ?? []) as $item)
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ $item['label'] ?? 'Expense' }} <span class="text-muted small">{{ $item['note'] ?? '' }}</span></span>
+                                <strong>Rs. {{ number_format((float) ($item['amount'] ?? 0), 2) }}</strong>
+                            </li>
+                            @empty
+                            <li class="list-group-item text-muted">No expense lines recorded.</li>
+                            @endforelse
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="fw-bold mb-2">Expense Note</div>
+                        <div class="border rounded p-3 bg-light">{{ $viewDay->expense_note ?: 'No note added.' }}</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-light" wire:click="closeViewModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($showDeleteModal && $dayToDelete)
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 14px;">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-danger">Delete Daily Log</h5>
+                    <button type="button" class="btn-close" wire:click="cancelDeleteDay"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-1">Are you sure you want to delete Day {{ $dayToDelete->day_no }}?</p>
+                    <p class="mb-0 text-muted">This will remove the log, expense lines, materials, and commissions.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-light" wire:click="cancelDeleteDay">Cancel</button>
+                    <button class="btn btn-danger" wire:click="deleteDay">Delete</button>
                 </div>
             </div>
         </div>

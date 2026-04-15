@@ -79,7 +79,7 @@ class ProductionAdminDashboard extends Component
             ],
             [
                 'label' => 'Expenses',
-                'value' => '$' . number_format($thisMonthExpense, 2),
+                'value' =>  number_format($thisMonthExpense, 2),
                 'sub' => $this->formatTrendText($expenseChange, 'this month vs last month'),
                 'trend' => null,
                 'color' => '#ef4444',

@@ -291,16 +291,29 @@
 
 		<div class="nav-center">
 			<a href="{{ route('production.admin.dashboard') }}" class="nav-item {{ request()->routeIs('production.admin.dashboard') ? 'active' : '' }}">Dashboard</a>
-			<div class="nav-dropdown {{ request()->routeIs(['production.admin.purchase-order', 'production.admin.grn']) ? 'active-parent' : '' }}">
+			<div class="nav-dropdown {{ request()->routeIs(['production.admin.purchase-order', 'production.admin.grn', 'production.admin.suppliers']) ? 'active-parent' : '' }}">
 				<a href="#" class="nav-item">Purchases <i class="bi bi-chevron-down ms-1" style="font-size: 0.7rem"></i></a>
 				<div class="dropdown-content">
 					<a href="{{ route('production.admin.purchase-order') }}">Purchase List</a>
+					<a href="{{ route('production.admin.suppliers') }}">Supplier List</a>
 					<a href="{{ route('production.admin.grn') }}">GRN</a>
 				</div>
 			</div>
-			<a href="{{ route('production.admin.material-list') }}" class="nav-item {{ request()->routeIs('production.admin.material-list') ? 'active' : '' }}">Materials</a>
-			<a href="{{ route('production.admin.batches') }}" class="nav-item {{ request()->routeIs(['production.admin.batches', 'production.admin.batch-details']) ? 'active' : '' }}">Production</a>
-			<a href="{{ route('production.admin.staff') }}" class="nav-item {{ request()->routeIs('production.admin.staff') ? 'active' : '' }}">Staff</a>
+			<div class="nav-dropdown {{ request()->routeIs(['production.admin.material-list', 'production.admin.batches', 'production.admin.batch-details', 'production.admin.expenses']) ? 'active-parent' : '' }}">
+				<a href="#" class="nav-item">Production <i class="bi bi-chevron-down ms-1" style="font-size: 0.7rem"></i></a>
+				<div class="dropdown-content">
+					<a href="{{ route('production.admin.material-list') }}">Material List</a>
+					<a href="{{ route('production.admin.batches') }}">Production Batch</a>
+					<a href="{{ route('production.admin.expenses') }}">Expenses</a>
+				</div>
+			</div>
+			<div class="nav-dropdown {{ request()->routeIs(['production.admin.salary', 'production.admin.staff']) ? 'active-parent' : '' }}">
+				<a href="#" class="nav-item">Salary <i class="bi bi-chevron-down ms-1" style="font-size: 0.7rem"></i></a>
+				<div class="dropdown-content">
+					<a href="{{ route('production.admin.salary') }}">Salary Report</a>
+					<a href="{{ route('production.admin.staff') }}">Staff List</a>
+				</div>
+			</div>
 			<a href="{{ route('production.admin.settings') }}" class="nav-item {{ request()->routeIs('production.admin.settings') ? 'active' : '' }}">Settings</a>
 		</div>
 

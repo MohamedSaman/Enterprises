@@ -556,7 +556,12 @@
                 <div class="modal-body p-5">
                     <div class="row g-4 mb-5">
                         <div class="col-md-6 text-start">
-                            <label class="form-label d-block mb-2">Select Supplier</label>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <label class="form-label d-block mb-0">Select Supplier</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary fw-bold" wire:click="openSupplierCreateModal">
+                                    <i class="bi bi-plus-lg me-1"></i>Supplier
+                                </button>
+                            </div>
                             <select class="form-select" wire:model="supplier_id">
                                 <option value="">Choose a supplier...</option>
                                 @foreach($suppliers as $supplier)
@@ -618,18 +623,17 @@
                                     </td>
                                     <td class="px-3 py-3">
                                         <div class="input-group" style="height: 48px;">
-                                            <input type="number" class="form-control" wire:model.live="items.{{ $index }}.quantity" step="0.01">
+                                            <input type="number" class="form-control" wire:model.blur="items.{{ $index }}.quantity" step="0.01">
                                             <span class="input-group-text bg-white border-start-0 text-muted small px-2">Ton</span>
                                         </div>
                                     </td>
                                     <td class="px-3 py-3">
                                         <div class="input-group" style="height: 48px;">
-                                            <span class="input-group-text bg-white border-end-0 text-muted px-2">$</span>
-                                            <input type="number" class="form-control" wire:model.live="items.{{ $index }}.unit_price" step="0.01">
+                                            <input type="number" class="form-control" wire:model.blur="items.{{ $index }}.unit_price" step="0.01">
                                         </div>
                                     </td>
                                     <td class="px-3 py-3 text-end fw-bold" style="color: #1e293b; font-size: 1rem;">
-                                        ${{ number_format($item['total'] ?? 0, 2) }}
+                                        {{ number_format($item['total'] ?? 0, 2) }}
                                     </td>
                                     <td class="py-3 text-center">
                                         <button class="btn btn-link text-danger p-0" wire:click="removeItem({{ $index }})" style="font-size: 1.2rem;">
@@ -648,7 +652,7 @@
                         </button>
                         <div class="text-end">
                             <span class="text-uppercase text-muted fw-bold small">Total Amount Due</span>
-                            <h3 class="fw-bold mb-0" style="color: #1e293b">${{ number_format(collect($items)->sum('total'), 2) }}</h3>
+                            <h3 class="fw-bold mb-0" style="color: #1e293b">{{ number_format(collect($items)->sum('total'), 2) }}</h3>
                         </div>
                     </div>
                 </div>
@@ -661,6 +665,66 @@
             </div>
         </div>
     </div>
+
+    @if($showSupplierCreateModal)
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.55); z-index: 2000;">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 14px;">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Add Supplier</h5>
+                    <button type="button" class="btn-close" wire:click="closeSupplierCreateModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6 text-start">
+                            <label class="form-label fw-bold">Supplier Name</label>
+                            <input type="text" class="form-control" wire:model="new_supplier_name" placeholder="Enter supplier name">
+                            @error('new_supplier_name') <span class="text-danger small">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="col-md-6 text-start">
+                            <label class="form-label fw-bold">Business Name</label>
+                            <input type="text" class="form-control" wire:model="new_supplier_businessname" placeholder="Enter business name">
+                            @error('new_supplier_businessname') <span class="text-danger small">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="col-md-6 text-start">
+                            <label class="form-label fw-bold">Phone</label>
+                            <input type="text" class="form-control" wire:model="new_supplier_phone" placeholder="Enter phone">
+                            @error('new_supplier_phone') <span class="text-danger small">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="col-md-6 text-start">
+                            <label class="form-label fw-bold">Email</label>
+                            <input type="email" class="form-control" wire:model="new_supplier_email" placeholder="Enter email">
+                            @error('new_supplier_email') <span class="text-danger small">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="col-md-6 text-start">
+                            <label class="form-label fw-bold">Status</label>
+                            <select class="form-select" wire:model="new_supplier_status">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            @error('new_supplier_status') <span class="text-danger small">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="col-12 text-start">
+                            <label class="form-label fw-bold">Address</label>
+                            <input type="text" class="form-control" wire:model="new_supplier_address" placeholder="Enter address">
+                            @error('new_supplier_address') <span class="text-danger small">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="col-12 text-start">
+                            <label class="form-label fw-bold">Notes</label>
+                            <textarea class="form-control" rows="2" wire:model="new_supplier_notes" placeholder="Optional notes"></textarea>
+                            @error('new_supplier_notes') <span class="text-danger small">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" wire:click="closeSupplierCreateModal">Cancel</button>
+                    <button type="button" class="btn btn-primary" wire:click="saveSupplierFromModal">Save Supplier</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
     @endif
 
     {{-- ============================================================
@@ -686,7 +750,7 @@
                         </div>
                         <div class="col-md-4">
                             <p class="text-muted small text-uppercase fw-bold mb-1">Batch Number</p>
-                            <input type="text" class="form-control" wire:model="batch_no">
+                            <input type="text" class="form-control" wire:model.defer="batch_no">
                         </div>
                     </div>
 
@@ -717,22 +781,23 @@
                                     <td class="text-center">
                                         @if($item['received'])
                                         <input type="number" class="form-control text-center fw-bold"
-                                            wire:model="grnItems.{{ $index }}.received_qty" step="0.01">
+                                            wire:model.live.debounce-1000ms="grnItems.{{ $index }}.received_qty" step="0.01"
+                                            min="0">
                                         @else
                                         <span class="text-muted fst-italic">Skipped</span>
                                         @endif
                                     </td>
                                     <td>
                                         <div class="input-group">
-                                            <span class="input-group-text bg-white border-end-0 text-muted px-2">$</span>
+                                            <span class="input-group-text bg-white border-end-0 text-muted px-2">Rs.</span>
                                             <input type="number" class="form-control border-start-0 text-end fw-bold"
-                                                wire:model="grnItems.{{ $index }}.cost_price" step="0.01">
+                                                wire:model.live.debounce-1000ms="grnItems.{{ $index }}.cost_price" step="0.01">
                                         </div>
                                     </td>
                                     <td class="text-center">
                                         <div class="form-check form-switch d-flex justify-content-center">
                                             <input class="form-check-input" type="checkbox"
-                                                wire:model="grnItems.{{ $index }}.received">
+                                                wire:model.live="grnItems.{{ $index }}.received">
                                         </div>
                                     </td>
                                 </tr>
