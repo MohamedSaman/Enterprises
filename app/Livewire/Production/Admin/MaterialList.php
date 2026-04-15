@@ -26,8 +26,8 @@ class MaterialList extends Component
     public $view_material_id = null;
     public $view_material_name = '';
     public $view_material_code = '';
-    public $variantStocks = [];
-    public $variantTotalStock = 0;
+    public $batchStocks = [];
+    public $batchTotalStock = 0;
     public $delete_material_id = null;
     public $delete_material_name = '';
     public $deleteBlocked = false;
@@ -76,39 +76,23 @@ class MaterialList extends Component
         $this->view_material_name = $material->name;
         $this->view_material_code = $material->code;
 
-        // Show variant-wise available stock from active batches.
-        $grouped = $material->batches()
-            ->where('remaining_quantity', '>', 0)
-            ->select('size', DB::raw('SUM(remaining_quantity) as stock_qty'))
-            ->groupBy('size')
-            ->orderBy('size')
+        // Show batch-wise stock details.
+        $batches = $material->batches()
+            ->select('batch_no', 'size', 'quantity', 'remaining_quantity', 'cost_price')
+            ->orderByDesc('id')
             ->get();
 
-        $stockMap = [];
-        foreach ($grouped as $row) {
-            $size = strtoupper((string) ($row->size ?: 'N/A'));
-            $stockMap[$size] = (float) $row->stock_qty;
-        }
-
-        // Keep S/M/L visible first, then append any extra variants.
-        $orderedStocks = [];
-        foreach (['S', 'M', 'L'] as $size) {
-            $orderedStocks[] = [
-                'size' => $size,
-                'qty' => $stockMap[$size] ?? 0,
+        $this->batchStocks = $batches->map(function ($row) {
+            return [
+                'batch_no' => (string) ($row->batch_no ?: '-'),
+                'size' => strtoupper((string) ($row->size ?: 'N/A')),
+                'received_qty' => (float) ($row->quantity ?? 0),
+                'remaining_qty' => (float) ($row->remaining_quantity ?? 0),
+                'cost_price' => (float) ($row->cost_price ?? 0),
             ];
-            unset($stockMap[$size]);
-        }
+        })->toArray();
 
-        foreach ($stockMap as $size => $qty) {
-            $orderedStocks[] = [
-                'size' => $size,
-                'qty' => $qty,
-            ];
-        }
-
-        $this->variantStocks = $orderedStocks;
-        $this->variantTotalStock = array_sum(array_column($orderedStocks, 'qty'));
+        $this->batchTotalStock = array_sum(array_column($this->batchStocks, 'remaining_qty'));
         $this->showStockModal = true;
     }
 
@@ -118,8 +102,8 @@ class MaterialList extends Component
         $this->view_material_id = null;
         $this->view_material_name = '';
         $this->view_material_code = '';
-        $this->variantStocks = [];
-        $this->variantTotalStock = 0;
+        $this->batchStocks = [];
+        $this->batchTotalStock = 0;
     }
 
     public function openDeleteModal($id)

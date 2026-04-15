@@ -252,6 +252,10 @@
             background: #fff;
             box-shadow: 0 0 0 4px rgba(0, 163, 224, 0.05);
         }
+
+        .stock-modal-dialog {
+            max-width: min(1120px, 96vw);
+        }
     </style>
     @endpush
 
@@ -379,11 +383,11 @@
 
     @if($showStockModal)
     <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered stock-modal-dialog">
             <div class="modal-content modal-content-custom">
                 <div class="modal-header modal-header-custom">
                     <div>
-                        <h5 class="modal-title fw-bold mb-1">Material Variant Stock</h5>
+                        <h5 class="modal-title fw-bold mb-1">Material Batch Stock</h5>
                         <p class="text-muted small mb-0">{{ $view_material_name }} ({{ $view_material_code }})</p>
                     </div>
                     <button type="button" class="btn-close" wire:click="closeStockModal"></button>
@@ -393,28 +397,35 @@
                         <table class="table table-bordered align-middle mb-0">
                             <thead class="bg-light">
                                 <tr class="text-uppercase small fw-bold">
-                                    <th>Variant</th>
-                                    <th class="text-end">Available Stock</th>
+                                    <th>Material Batch</th>
+                                    <th>Size</th>
+                                    <th class="text-end">Received Quantity (Ton)</th>
+                                    <th class="text-end">Remaining Stock (Ton)</th>
+                                    <th class="text-end">Price Per Ton</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($variantStocks as $row)
+                                @forelse($batchStocks as $row)
                                 <tr>
+                                    <td><span class="fw-semibold">{{ $row['batch_no'] }}</span></td>
                                     <td>
                                         <span class="badge rounded-pill" style="background: #f1f5f9; color: #334155; font-weight: 800;">{{ $row['size'] }}</span>
                                     </td>
-                                    <td class="text-end fw-bold">{{ number_format($row['qty'], 2) }}</td>
+                                    <td class="text-end fw-bold">{{ number_format($row['received_qty'], 2) }}</td>
+                                    <td class="text-end fw-bold">{{ number_format($row['remaining_qty'], 2) }}</td>
+                                    <td class="text-end fw-bold">{{ number_format($row['cost_price'], 2) }}</td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="2" class="text-center py-4 text-muted">No stock available for this material.</td>
+                                    <td colspan="5" class="text-center py-4 text-muted">No batch records available for this material.</td>
                                 </tr>
                                 @endforelse
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <th>Total</th>
-                                    <th class="text-end">{{ number_format($variantTotalStock, 2) }}</th>
+                                    <th colspan="3">Total Remaining Stock</th>
+                                    <th class="text-end">{{ number_format($batchTotalStock, 2) }}</th>
+                                    <th class="text-end">-</th>
                                 </tr>
                             </tfoot>
                         </table>

@@ -12,9 +12,12 @@ class ProductionBatch extends Model
     protected $fillable = [
         'batch_code',
         'size',
+        'production_material_id',
         'start_date',
         'end_date',
+        'estimated_days',
         'target_qty',
+        'planned_material_ton',
         'completed_qty',
         'supervisor_id',
         'created_by',
@@ -25,7 +28,14 @@ class ProductionBatch extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'estimated_days' => 'integer',
+        'planned_material_ton' => 'float',
     ];
+
+    public function material()
+    {
+        return $this->belongsTo(ProductionMaterial::class, 'production_material_id');
+    }
 
     public function supervisor()
     {

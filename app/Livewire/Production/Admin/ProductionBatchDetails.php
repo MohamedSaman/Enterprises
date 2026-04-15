@@ -5,6 +5,7 @@ namespace App\Livewire\Production\Admin;
 use App\Models\ProductionBatch;
 use App\Models\ProductionBatchDay;
 use App\Models\ProductionMaterial;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -27,10 +28,16 @@ class ProductionBatchDetails extends Component
     public string $expense_note = '';
     public array $material_rows = [];
     public array $commission_rows = [];
+    public array $commissionSettings = [
+        'threshold_items' => 10000,
+        'rate_upto_threshold' => 10,
+        'rate_after_threshold' => 15,
+    ];
 
     public function mount($batchId)
     {
         $this->loadBatch((int) $batchId);
+        $this->loadCommissionSettings();
         $this->work_date = now()->format('Y-m-d');
     }
 
@@ -48,6 +55,7 @@ class ProductionBatchDetails extends Component
         $this->produced_qty = 0;
         $this->expense_amount = 0;
         $this->expense_note = '';
+        $this->loadCommissionSettings();
 
         $this->material_rows = [
             ['material_id' => '', 'qty_ton' => 0, 'note' => ''],
@@ -60,6 +68,8 @@ class ProductionBatchDetails extends Component
                 'amount' => 0,
             ];
         })->toArray();
+
+        $this->recalculateCommissionRows();
 
         $this->showDayModal = true;
     }
@@ -82,8 +92,55 @@ class ProductionBatchDetails extends Component
         }
     }
 
+    public function updatedProducedQty(): void
+    {
+        $this->recalculateCommissionRows();
+    }
+
+    private function loadCommissionSettings(): void
+    {
+        $settings = Setting::query()
+            ->whereIn('key', [
+                'production_commission_threshold_items',
+                'production_commission_rate_upto_threshold',
+                'production_commission_rate_after_threshold',
+            ])
+            ->pluck('value', 'key');
+
+        $this->commissionSettings = [
+            'threshold_items' => (int) ($settings['production_commission_threshold_items'] ?? 10000),
+            'rate_upto_threshold' => (float) ($settings['production_commission_rate_upto_threshold'] ?? 10),
+            'rate_after_threshold' => (float) ($settings['production_commission_rate_after_threshold'] ?? 15),
+        ];
+    }
+
+    private function calculateTotalCommission(int $producedQty): float
+    {
+        $threshold = (int) ($this->commissionSettings['threshold_items'] ?? 10000);
+        $baseRate = (float) ($this->commissionSettings['rate_upto_threshold'] ?? 10);
+        $afterRate = (float) ($this->commissionSettings['rate_after_threshold'] ?? 15);
+
+        $withinThreshold = min($producedQty, $threshold);
+        $afterThreshold = max($producedQty - $threshold, 0);
+
+        return ($withinThreshold * $baseRate) + ($afterThreshold * $afterRate);
+    }
+
+    private function recalculateCommissionRows(): void
+    {
+        $staffCount = max(count($this->commission_rows), 1);
+        $totalCommission = $this->calculateTotalCommission((int) $this->produced_qty);
+        $perStaffAmount = $staffCount > 0 ? round($totalCommission / $staffCount, 2) : 0;
+
+        foreach ($this->commission_rows as $index => $row) {
+            $this->commission_rows[$index]['amount'] = $perStaffAmount;
+        }
+    }
+
     public function saveDayLog()
     {
+        $this->recalculateCommissionRows();
+
         $this->validate([
             'day_no' => 'required|integer|min:1',
             'work_date' => 'required|date',
@@ -209,6 +266,8 @@ class ProductionBatchDetails extends Component
             'selectedDay' => $selectedDay,
             'materials' => $this->materials,
             'totals' => $this->totals,
+            'commissionSettings' => $this->commissionSettings,
+            'calculatedTotalCommission' => $this->calculateTotalCommission((int) $this->produced_qty),
         ]);
     }
 }

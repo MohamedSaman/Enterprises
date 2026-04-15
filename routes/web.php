@@ -310,8 +310,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     // !! Production Module Routes - Admin
     Route::middleware('role:admin')->prefix('production/admin')->name('production.admin.')->group(function () {
         Route::get('/dashboard', \App\Livewire\Production\Admin\ProductionAdminDashboard::class)->name('dashboard');
+        Route::get('/profile', function () {
+            return view('profile.production-show', ['role' => 'admin']);
+        })->name('profile');
         Route::get('/staff', \App\Livewire\Production\Admin\StaffManagement::class)->name('staff');
         Route::get('/material-list', \App\Livewire\Production\Admin\MaterialList::class)->name('material-list');
+        Route::get('/settings', \App\Livewire\Production\Admin\ProductionSettings::class)->name('settings');
         Route::get('/purchase-order', \App\Livewire\Production\Admin\PurchaseOrder::class)->name('purchase-order');
         Route::get('/grn', \App\Livewire\Production\Admin\GRN::class)->name('grn');
         Route::get('/batches', \App\Livewire\Production\Admin\ProductionBatches::class)->name('batches');
@@ -321,7 +325,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     // !! Production Module Routes - Staff
     Route::middleware('role:staff')->prefix('production/staff')->name('production.staff.')->group(function () {
         Route::get('/dashboard', \App\Livewire\Production\Staff\ProductionStaffDashboard::class)->name('dashboard');
-        // Add more production staff routes here as needed
+        Route::get('/profile', function () {
+            return view('profile.production-show', ['role' => 'staff']);
+        })->name('profile');
+        Route::get('/batches', \App\Livewire\Production\Staff\ProductionStaffBatches::class)->name('batches');
+        Route::get('/batches/{batchId}', \App\Livewire\Production\Staff\ProductionStaffBatchDetails::class)->name('batch-details');
+        Route::get('/settings', \App\Livewire\Production\Staff\ProductionStaffSettings::class)->name('settings');
     });
 
     // !! Export routes (accessible to authenticated users)

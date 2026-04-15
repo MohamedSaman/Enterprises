@@ -72,6 +72,7 @@
 			position: absolute;
 			left: 50%;
 			transform: translateX(-50%);
+			z-index: 1000;
 		}
 
 		.nav-item {
@@ -107,6 +108,8 @@
 			display: flex;
 			align-items: center;
 			gap: 1.75rem;
+			position: relative;
+			z-index: 1101;
 		}
 
 		.notification-btn {
@@ -154,12 +157,23 @@
 			transition: all 0.2s;
 			color: #1a202c;
 			cursor: pointer;
-			border: 1px solid transparent;
+			border: 1px solid transparent !important;
+			background: transparent !important;
+			outline: none !important;
+			box-shadow: none !important;
 		}
 
 		.admin-info:hover {
-			background-color: var(--primary-soft);
-			border-color: #e0f2fe;
+			background-color: var(--primary-soft) !important;
+			border-color: #e0f2fe !important;
+		}
+
+		.admin-info:focus,
+		.admin-info:focus-visible,
+		.admin-info:active {
+			outline: none !important;
+			box-shadow: none !important;
+			border: 1px solid transparent !important;
 		}
 
 		.admin-avatar {
@@ -277,10 +291,6 @@
 
 		<div class="nav-center">
 			<a href="{{ route('production.admin.dashboard') }}" class="nav-item {{ request()->routeIs('production.admin.dashboard') ? 'active' : '' }}">Dashboard</a>
-			<a href="{{ route('production.admin.staff') }}" class="nav-item {{ request()->routeIs('production.admin.staff') ? 'active' : '' }}">Staff</a>
-			<a href="{{ route('production.admin.material-list') }}" class="nav-item {{ request()->routeIs('production.admin.material-list') ? 'active' : '' }}">Materials</a>
-			<a href="{{ route('production.admin.batches') }}" class="nav-item {{ request()->routeIs(['production.admin.batches', 'production.admin.batch-details']) ? 'active' : '' }}">Production</a>
-
 			<div class="nav-dropdown {{ request()->routeIs(['production.admin.purchase-order', 'production.admin.grn']) ? 'active-parent' : '' }}">
 				<a href="#" class="nav-item">Purchases <i class="bi bi-chevron-down ms-1" style="font-size: 0.7rem"></i></a>
 				<div class="dropdown-content">
@@ -288,8 +298,10 @@
 					<a href="{{ route('production.admin.grn') }}">GRN</a>
 				</div>
 			</div>
-
-			<a href="#" class="nav-item">Reports</a>
+			<a href="{{ route('production.admin.material-list') }}" class="nav-item {{ request()->routeIs('production.admin.material-list') ? 'active' : '' }}">Materials</a>
+			<a href="{{ route('production.admin.batches') }}" class="nav-item {{ request()->routeIs(['production.admin.batches', 'production.admin.batch-details']) ? 'active' : '' }}">Production</a>
+			<a href="{{ route('production.admin.staff') }}" class="nav-item {{ request()->routeIs('production.admin.staff') ? 'active' : '' }}">Staff</a>
+			<a href="{{ route('production.admin.settings') }}" class="nav-item {{ request()->routeIs('production.admin.settings') ? 'active' : '' }}">Settings</a>
 		</div>
 
 		<div class="nav-right">
@@ -299,21 +311,21 @@
 			</button>
 
 			<div class="dropdown shadow-sm rounded-pill">
-				<a class="admin-info dropdown-toggle text-decoration-none" id="adminDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+				<button type="button" class="admin-info dropdown-toggle text-decoration-none" id="adminDropdown" data-bs-toggle="dropdown" aria-expanded="false">
 					@if(auth()->user()->profile_photo_path)
 					<img src="{{ route('profile.photo.show', auth()->id()) }}?v={{ md5((string) auth()->user()->profile_photo_path) }}" class="admin-avatar" alt="{{ auth()->user()->name }}" style="object-fit:cover;">
 					@else
 					<div class="admin-avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
 					@endif
-					<div class="admin-name d-none d-lg-block ms-2">{{ auth()->user()->name }} <i class="bi bi-chevron-down small ms-1" style="font-size: 0.7rem"></i></div>
-				</a>
+					<div class="admin-name d-none d-lg-block ms-2">{{ auth()->user()->name }}</div>
+				</button>
 				<ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-2 mt-3" style="border-radius: 12px; min-width: 200px;" aria-labelledby="adminDropdown">
 					<li class="px-3 py-2 border-bottom mb-2 d-lg-none">
 						<div class="fw-bold text-dark">{{ auth()->user()->name }}</div>
 						<small class="text-muted">Production Admin</small>
 					</li>
 					<li>
-						<a class="dropdown-item py-2 px-3 rounded-2 fw-semibold" href="{{ route('profile.show') }}">
+						<a class="dropdown-item py-2 px-3 rounded-2 fw-semibold" href="{{ route('production.admin.profile') }}">
 							<i class="bi bi-person me-2 text-primary"></i>My Profile
 						</a>
 					</li>
@@ -343,6 +355,19 @@
 	</main>
 
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+	<script>
+		// Ensure dropdown toggle works on page load
+		document.addEventListener('DOMContentLoaded', function() {
+			const dropdownToggle = document.getElementById('adminDropdown');
+			if (dropdownToggle) {
+				dropdownToggle.addEventListener('click', function(e) {
+					e.preventDefault();
+					const dropdown = new bootstrap.Dropdown(this);
+					dropdown.toggle();
+				});
+			}
+		});
+	</script>
 	@stack('scripts')
 	@livewireScripts
 </body>

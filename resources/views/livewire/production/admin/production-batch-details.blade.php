@@ -53,8 +53,8 @@
             </div>
             <div class="d-flex align-items-center gap-2">
                 <span class="summary-chip">Produced: {{ number_format($totals['produced']) }}</span>
-                <span class="summary-chip">Expenses: ${{ number_format($totals['expenses'], 2) }}</span>
-                <span class="summary-chip">Commissions: ${{ number_format($totals['commissions'], 2) }}</span>
+                <span class="summary-chip">Expenses: {{ number_format($totals['expenses'], 2) }}</span>
+                <span class="summary-chip">Commissions: {{ number_format($totals['commissions'], 2) }}</span>
                 <span class="summary-chip">Status: {{ strtoupper($batch->status) }}</span>
                 @if($batch->status !== 'completed')
                 <button class="btn btn-sm btn-success" wire:click="completeBatch">Mark Completed</button>
@@ -102,9 +102,9 @@
                                 <td class="fw-bold">Day {{ $day->day_no }}</td>
                                 <td>{{ $day->work_date?->format('M d, Y') }}</td>
                                 <td class="text-end">{{ number_format($day->produced_qty) }}</td>
-                                <td class="text-end">${{ number_format($day->expense_amount, 2) }}</td>
+                                <td class="text-end">{{ number_format($day->expense_amount, 2) }}</td>
                                 <td class="text-end">
-                                    ${{ number_format(collect($day->staff_commissions ?? [])->sum('amount'), 2) }}
+                                    {{ number_format(collect($day->staff_commissions ?? [])->sum('amount'), 2) }}
                                 </td>
                             </tr>
                             @empty
@@ -125,7 +125,7 @@
                         <div class="p-3 border rounded">Produced Items<br><b>{{ number_format($selectedDay->produced_qty) }}</b></div>
                     </div>
                     <div class="col-md-4">
-                        <div class="p-3 border rounded">Expense<br><b>${{ number_format($selectedDay->expense_amount, 2) }}</b></div>
+                        <div class="p-3 border rounded">Expense<br><b>{{ number_format($selectedDay->expense_amount, 2) }}</b></div>
                     </div>
                 </div>
 
@@ -211,7 +211,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-bold">Produced Items</label>
-                            <input type="number" class="form-control" min="0" wire:model="produced_qty">
+                            <input type="number" class="form-control" min="0" wire:model.live="produced_qty">
                             @error('produced_qty') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
                         <div class="col-md-3">
@@ -222,6 +222,18 @@
                         <div class="col-md-3">
                             <label class="form-label fw-bold">Day No</label>
                             <input type="number" class="form-control" wire:model="day_no" readonly>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info border-0 mb-4">
+                        <div class="fw-bold mb-1">Commission Calculation</div>
+                        <div class="small mb-1">
+                            Threshold: {{ number_format($commissionSettings['threshold_items'] ?? 10000) }} items |
+                            Rate up to threshold: ${{ number_format($commissionSettings['rate_upto_threshold'] ?? 10, 2) }} |
+                            Rate after threshold: ${{ number_format($commissionSettings['rate_after_threshold'] ?? 15, 2) }}
+                        </div>
+                        <div class="small fw-semibold">
+                            Total commission for this log: ${{ number_format($calculatedTotalCommission, 2) }}
                         </div>
                     </div>
 
@@ -276,6 +288,7 @@
                             </tbody>
                         </table>
                     </div>
+                    <div class="small text-muted mt-2">Commission rows are pre-filled from the configured rules and can still be adjusted before saving.</div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-light" wire:click="closeDayModal">Cancel</button>

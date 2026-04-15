@@ -50,6 +50,42 @@
             background: #eff6ff;
             color: #1d4ed8;
         }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .detail-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.9rem 1rem;
+        }
+
+        .detail-label {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            font-weight: 700;
+            color: #0f172a;
+            word-break: break-word;
+        }
     </style>
     @endpush
 
@@ -78,6 +114,7 @@
                         <th>Role</th>
                         <th>Joining Date</th>
                         <th class="text-end">Basic Salary</th>
+                        <th class="text-end">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -92,10 +129,21 @@
                         <td><span class="role-pill">{{ $staff->detail->work_role ?? '-' }}</span></td>
                         <td>{{ $staff->detail?->join_date?->format('M d, Y') ?? '-' }}</td>
                         <td class="text-end fw-bold">${{ number_format((float) ($staff->detail->basic_salary ?? 0), 2) }}</td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-light action-btn" wire:click="openViewModal({{ $staff->id }})" title="View">
+                                <i class="bi bi-eye text-primary"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-light action-btn ms-1" wire:click="openEditModal({{ $staff->id }})" title="Edit">
+                                <i class="bi bi-pencil-fill text-muted"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-light action-btn ms-1" wire:click="openDeleteModal({{ $staff->id }})" title="Delete">
+                                <i class="bi bi-trash text-danger"></i>
+                            </button>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">No production staff found.</td>
+                        <td colspan="7" class="text-center py-5 text-muted">No production staff found.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -173,6 +221,87 @@
                 <div class="modal-footer">
                     <button class="btn btn-light" wire:click="closeCreateModal">Cancel</button>
                     <button class="btn-custom" wire:click="saveStaff">Save Staff</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($showViewModal)
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 14px;">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Staff Details</h5>
+                    <button type="button" class="btn-close" wire:click="closeViewModal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="detail-grid">
+                        <div class="detail-box">
+                            <div class="detail-label">Name</div>
+                            <div class="detail-value">{{ $view_name }}</div>
+                        </div>
+                        <div class="detail-box">
+                            <div class="detail-label">Email</div>
+                            <div class="detail-value">{{ $view_email }}</div>
+                        </div>
+                        <div class="detail-box">
+                            <div class="detail-label">Phone</div>
+                            <div class="detail-value">{{ $view_phone }}</div>
+                        </div>
+                        <div class="detail-box">
+                            <div class="detail-label">NIC</div>
+                            <div class="detail-value">{{ $view_nic }}</div>
+                        </div>
+                        <div class="detail-box">
+                            <div class="detail-label">Role</div>
+                            <div class="detail-value">{{ $view_staff_role }}</div>
+                        </div>
+                        <div class="detail-box">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value">{{ $view_status }}</div>
+                        </div>
+                        <div class="detail-box">
+                            <div class="detail-label">Joining Date</div>
+                            <div class="detail-value">{{ $view_joining_date }}</div>
+                        </div>
+                        <div class="detail-box">
+                            <div class="detail-label">Basic Salary</div>
+                            <div class="detail-value">${{ number_format((float) $view_basic_salary, 2) }}</div>
+                        </div>
+                        <div class="detail-box" style="grid-column: 1 / -1;">
+                            <div class="detail-label">Address</div>
+                            <div class="detail-value">{{ $view_address }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-light" wire:click="closeViewModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($showDeleteModal)
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 14px;">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-danger">Delete Staff</h5>
+                    <button type="button" class="btn-close" wire:click="closeDeleteModal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-2">Are you sure you want to delete this staff member?</p>
+                    @if($deleteBlocked)
+                    <div class="alert alert-danger mb-0">{{ $deleteBlockMessage }}</div>
+                    @else
+                    <div class="alert alert-warning mb-0">This action cannot be undone.</div>
+                    @endif
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-light" wire:click="closeDeleteModal">Cancel</button>
+                    <button class="btn btn-danger" wire:click="deleteStaff" @disabled($deleteBlocked)>Delete</button>
                 </div>
             </div>
         </div>

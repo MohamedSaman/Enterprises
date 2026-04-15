@@ -88,7 +88,7 @@
             border-radius: 12px;
             padding: 2.25rem;
             border: 1px solid #eef2f6;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
             display: flex;
             flex-direction: column;
         }
@@ -143,6 +143,12 @@
             align-items: center;
         }
 
+        .item-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
         .status-dot {
             width: 10px;
             height: 10px;
@@ -175,7 +181,7 @@
             border-radius: 12px;
             padding: 2.5rem;
             border: 1px solid #eef2f6;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
             margin-bottom: 4rem;
         }
 
@@ -186,6 +192,77 @@
             display: flex;
             overflow: hidden;
             margin-top: 0.5rem;
+        }
+
+        .legend {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.25rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 700;
+        }
+
+        .legend-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .bar-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+        }
+
+        .bar-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .month-name {
+            color: #1e293b;
+            font-weight: 700;
+        }
+
+        .unit-count {
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 992px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .middle-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-card,
+            .monthly-card {
+                padding: 1.25rem;
+            }
+
+            .fab {
+                right: 1rem;
+                bottom: 1rem;
+            }
         }
 
         /* FAB */
@@ -238,7 +315,7 @@
                     <h2 class="section-title">Daily Production Trend</h2>
                     <p class="section-subtitle">Real-time output analysis (Last 7 Days)</p>
                 </div>
-                <a href="#" class="btn-link-custom">
+                <a href="{{ route('production.admin.batches') }}" class="btn-link-custom">
                     View Full Report <i class="bi bi-arrow-right"></i>
                 </a>
             </div>
@@ -253,7 +330,7 @@
                 <h2 class="section-title">Recent Production</h2>
             </div>
             <div class="production-list">
-                @foreach($recentProductions as $item)
+                @forelse($recentProductions as $item)
                 <div class="production-item">
                     <div class="item-left">
                         <div class="status-dot" style="background-color: {{ $item['status_color'] }};"></div>
@@ -266,7 +343,9 @@
                         {{ $item['time'] }}
                     </div>
                 </div>
-                @endforeach
+                @empty
+                <div class="text-muted small">No production logs found.</div>
+                @endforelse
             </div>
         </div>
     </div>
@@ -279,71 +358,41 @@
                 <p class="section-subtitle">Aggregated output across all manufacturing sectors</p>
             </div>
         </div>
-        
+
         <div class="legend">
             <div class="legend-item">
                 <div class="legend-color" style="background-color: #005a8b;"></div>
-                Primary Sector
+                Produced Units
             </div>
             <div class="legend-item">
                 <div class="legend-color" style="background-color: #8a6114;"></div>
-                Auxiliary Output
+                Expense Intensity
             </div>
         </div>
 
         <div class="bar-rows">
-            <!-- January -->
+            @foreach($monthlyStats as $month)
             <div class="bar-group">
                 <div class="bar-label-row">
-                    <div class="month-name">January</div>
-                    <div class="unit-count"><b>1,240</b> UNITS</div>
+                    <div class="month-name">
+                        {{ $month['month'] }}
+                        @if($month['is_peak'])
+                        <span class="text-warning fw-bold small ms-2">(PEAK)</span>
+                        @endif
+                    </div>
+                    <div class="unit-count"><b>{{ number_format($month['produced']) }}</b> UNITS</div>
                 </div>
                 <div class="stacked-bar-container">
-                    <div class="bar-segment" style="width: 70%; background-color: #005a8b;"></div>
-                    <div class="bar-segment" style="width: 15%; background-color: #8a6114;"></div>
+                    <div class="bar-segment" style="width: {{ $month['produced_width'] }}%; background-color: #005a8b;"></div>
+                    <div class="bar-segment" style="width: {{ $month['expense_width'] }}%; background-color: #8a6114;"></div>
                 </div>
             </div>
-
-            <!-- February -->
-            <div class="bar-group">
-                <div class="bar-label-row">
-                    <div class="month-name">February</div>
-                    <div class="unit-count"><b>1,480</b> UNITS</div>
-                </div>
-                <div class="stacked-bar-container">
-                    <div class="bar-segment" style="width: 75%; background-color: #005a8b;"></div>
-                    <div class="bar-segment" style="width: 12%; background-color: #8a6114;"></div>
-                </div>
-            </div>
-
-            <!-- March (Peak) -->
-            <div class="bar-group">
-                <div class="bar-label-row">
-                    <div class="month-name">March <span class="text-warning fw-bold small ms-2">(PEAK)</span></div>
-                    <div class="unit-count"><b>1,824</b> UNITS</div>
-                </div>
-                <div class="stacked-bar-container">
-                    <div class="bar-segment" style="width: 82%; background-color: #005a8b;"></div>
-                    <div class="bar-segment" style="width: 10%; background-color: #8a6114;"></div>
-                </div>
-            </div>
-
-            <!-- April -->
-            <div class="bar-group">
-                <div class="bar-label-row">
-                    <div class="month-name">April</div>
-                    <div class="unit-count"><b>1,150</b> UNITS</div>
-                </div>
-                <div class="stacked-bar-container">
-                    <div class="bar-segment" style="width: 55%; background-color: #005a8b;"></div>
-                    <div class="bar-segment" style="width: 25%; background-color: #8a6114;"></div>
-                </div>
-            </div>
+            @endforeach
         </div>
     </div>
 
     <!-- Floating Action Button -->
-    <a href="#" class="fab">
+    <a href="{{ route('production.admin.batches') }}" class="fab">
         <i class="bi bi-plus-lg fs-5"></i>
         Log Production
     </a>
@@ -353,16 +402,20 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const ctx = document.getElementById('productionTrendChart').getContext('2d');
-        
+
         const labels = @json($dailyLabels);
         const data = @json($dailyValues);
+        const capacityTarget = @json($dailyCapacity);
+
+        if (window.productionChart) {
+            window.productionChart.destroy();
+        }
 
         window.productionChart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
-                datasets: [
-                    {
+                datasets: [{
                         label: 'Units Produced',
                         data: data,
                         backgroundColor: function(context) {
@@ -377,7 +430,7 @@
                     },
                     {
                         label: 'Capacity',
-                        data: Array(labels.length).fill(250),
+                        data: Array(labels.length).fill(capacityTarget),
                         backgroundColor: 'rgba(238, 242, 255, 0.8)',
                         borderRadius: 4,
                         borderSkipped: false,
@@ -420,7 +473,7 @@
                     y: {
                         display: false,
                         beginAtZero: true,
-                        max: 300,
+                        max: capacityTarget,
                         grid: {
                             display: false
                         }
