@@ -2,79 +2,95 @@
     @push('styles')
     <style>
         .dashboard-wrapper {
-            background-color: #f8faff;
+            background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%);
             min-height: 100vh;
-            padding: 1rem 0;
+            padding: 2rem 0;
         }
 
         .section-card {
-            background: #fff;
-            border-radius: 12px;
+            background: #ffffff;
+            border-radius: 14px;
             padding: 2rem;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(30, 41, 59, 0.08);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .section-card:hover {
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
         }
 
         .section-title {
-            font-size: 1.25rem;
-            font-weight: 800;
-            color: #1e293b;
-            margin-bottom: 0.35rem;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
         }
 
         .section-subtitle {
-            font-size: 0.85rem;
-            color: #94a3b8;
-            font-weight: 600;
+            font-size: 0.9rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
         }
 
         .btn-custom {
-            background: #00a3e0;
-            color: #fff;
-            border: 0;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: white;
+            border: none;
+            padding: 0.85rem 1.85rem;
             border-radius: 10px;
-            font-weight: 800;
-            padding: 0.75rem 1.25rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
         }
 
         .btn-custom:hover {
-            color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(2, 132, 199, 0.35);
+            color: white;
         }
 
         .status-badge {
-            border-radius: 999px;
-            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            padding: 0.55rem 1.1rem;
             font-size: 0.72rem;
             font-weight: 800;
             text-transform: uppercase;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
         }
 
         .status-active {
-            background: #eff6ff;
-            color: #2563eb;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
         }
 
         .status-completed {
-            background: #ecfdf5;
-            color: #059669;
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            color: #166534;
         }
 
         .batch-modal-content {
             border-radius: 16px;
-            border: 1px solid #e5edf5;
-            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.14);
+            border: 1px solid rgba(30, 41, 59, 0.08);
+            box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.15);
         }
 
         .batch-modal-header {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #eef2f6;
+            padding: 1.75rem 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            background: linear-gradient(135deg, #f8fafc 0%, #f0f4fa 100%);
         }
 
         .planner-card {
-            background: linear-gradient(180deg, #fbfdff 0%, #f6fafe 100%);
-            border: 1px solid #e6eef7;
+            background: linear-gradient(135deg, #f8fafc 0%, #f0f4fa 100%);
+            border: 1px solid #e2e8f0;
             border-radius: 12px;
-            padding: 1rem;
+            padding: 1.5rem;
         }
 
         .section-label {
@@ -90,13 +106,14 @@
             display: inline-flex;
             align-items: center;
             gap: 0.35rem;
-            border-radius: 999px;
-            padding: 0.2rem 0.65rem;
+            border-radius: 20px;
+            padding: 0.55rem 1.1rem;
             font-size: 0.74rem;
             font-weight: 700;
-            border: 1px solid #dbeafe;
-            background: #eff6ff;
-            color: #1d4ed8;
+            border: none;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            color: #0284c7;
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.15);
         }
 
         .metric-pill.low {
@@ -120,6 +137,125 @@
             font-size: 0.82rem;
             color: #475569;
         }
+
+        .search-input {
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            padding: 0.8rem 1rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: #0284c7;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+            outline: none;
+        }
+
+        .table-batch thead th {
+            border: none;
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 1rem 0.9rem;
+            background: rgba(248, 250, 252, 0.8);
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .table-batch tbody td {
+            border-color: #f1f5f9;
+            padding: 1rem 0.9rem;
+            font-weight: 500;
+            color: #334155;
+        }
+
+        .table-batch tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .table-batch tbody tr:hover {
+            background: rgba(2, 132, 199, 0.04);
+        }
+
+        .action-btn {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+            border-color: #cbd5e1;
+        }
+
+        .modal-body {
+            padding: 1.75rem 2rem;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #e2e8f0;
+            padding: 1rem 2rem 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 700;
+            color: #475569;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.45rem;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 10px;
+            border: 1px solid #dbe3ee;
+            background: #ffffff;
+            padding: 0.72rem 0.85rem;
+            font-weight: 500;
+            color: #0f172a;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+        }
+
+        .workers-panel .border.rounded {
+            border-color: #dbe3ee !important;
+            background: #ffffff;
+        }
+
+        .workers-panel .btn-outline-primary,
+        .workers-panel .btn-outline-danger {
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 991px) {
+            .modal-body {
+                padding: 1.2rem;
+            }
+
+            .batch-modal-header {
+                padding: 1.2rem 1.2rem;
+            }
+        }
     </style>
     @endpush
 
@@ -135,12 +271,12 @@
         </div>
 
         <div class="mb-4" style="max-width: 320px;">
-            <input type="text" class="form-control" placeholder="Search batch code, size, supervisor" wire:model.live="search">
+            <input type="text" class="form-control search-input" placeholder="Search batch code, size, supervisor" wire:model.live="search">
         </div>
 
         <div class="table-responsive">
-            <table class="table align-middle">
-                <thead class="table-light">
+            <table class="table align-middle table-batch mb-0">
+                <thead>
                     <tr class="text-uppercase small fw-bold">
                         <th>Batch</th>
                         <th>Size</th>
@@ -167,18 +303,18 @@
                             </span>
                         </td>
                         <td class="text-end">
-                            <a href="{{ route('production.admin.batch-details', $batch->id) }}" class="btn btn-sm btn-light" onclick="event.stopPropagation();">
-                                <i class="bi bi-eye me-1"></i>
+                            <a href="{{ route('production.admin.batch-details', $batch->id) }}" class="btn btn-sm action-btn" onclick="event.stopPropagation();">
+                                <i class="bi bi-eye"></i>
                             </a>
-                            <button type="button" class="btn btn-sm btn-light  ms-1" wire:click.stop="openEditModal({{ $batch->id }})" onclick="event.stopPropagation();">
-                                <i class="bi bi-pencil-fill me-1"></i>
+                            <button type="button" class="btn btn-sm action-btn ms-1" wire:click.stop="openEditModal({{ $batch->id }})" onclick="event.stopPropagation();">
+                                <i class="bi bi-pencil-fill"></i>
                             </button>
                             <button
                                 type="button"
-                                class="btn btn-sm btn-light ms-1"
+                                class="btn btn-sm action-btn ms-1"
                                 wire:click.stop="confirmDeleteBatch({{ $batch->id }})"
                                 onclick="event.stopPropagation();">
-                                <i class="bi bi-trash me-1"></i>
+                                <i class="bi bi-trash"></i>
                             </button>
                         </td>
                     </tr>
@@ -199,7 +335,10 @@
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content batch-modal-content">
                 <div class="modal-header batch-modal-header">
-                    <h5 class="modal-title fw-bold">{{ $isEditMode ? 'Edit Production Batch' : 'Create Production Batch' }}</h5>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-1">{{ $isEditMode ? 'Edit Production Batch' : 'Create Production Batch' }}</h5>
+                        <p class="text-muted small mb-0">Plan size, material, workers, and duration for this production cycle</p>
+                    </div>
                     <button type="button" class="btn-close" wire:click="closeCreateModal"></button>
                 </div>
                 <div class="modal-body p-4">

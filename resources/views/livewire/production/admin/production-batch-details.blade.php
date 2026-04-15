@@ -2,21 +2,21 @@
     @push('styles')
     <style>
         .dashboard-wrapper {
-            background-color: #f8faff;
+            background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%);
             min-height: 100vh;
-            padding: 1rem 0;
+            padding: 2rem 0;
         }
 
         .section-card {
-            background: #fff;
-            border-radius: 12px;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1px solid rgba(30, 41, 59, 0.08);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
         }
 
         .left-tabs {
             min-height: 520px;
-            border-right: 1px solid #eef2f6;
+            border-right: 1px solid #e2e8f0;
         }
 
         .tab-item {
@@ -28,19 +28,21 @@
             color: #475569;
             padding: 0.75rem 1rem;
             border-radius: 10px;
+            transition: all 0.2s ease;
         }
 
         .tab-item.active {
-            background: #e0f5fe;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
             color: #0284c7;
         }
 
         .summary-chip {
-            border-radius: 999px;
-            padding: 0.45rem 0.85rem;
-            background: #f1f5f9;
+            border-radius: 20px;
+            padding: 0.55rem 1.1rem;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
             font-weight: 700;
-            color: #334155;
+            color: #0284c7;
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.15);
         }
     </style>
     @endpush

@@ -2,27 +2,78 @@
     @push('styles')
     <style>
         .dashboard-wrapper {
-            background-color: #f8faff;
+            background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%);
             min-height: 100vh;
-            padding: 1rem 0;
+            padding: 2rem 0;
         }
 
         .panel-card {
-            background: #fff;
-            border-radius: 12px;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-            padding: 1.5rem;
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1px solid rgba(30, 41, 59, 0.08);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .panel-card:hover {
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
         }
 
         .stat-chip {
-            border-radius: 999px;
+            border-radius: 20px;
+            border: none;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            padding: 0.55rem 1.1rem;
+            font-weight: 700;
+            color: #0284c7;
+            font-size: 0.8rem;
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.15);
+        }
+
+        .form-label {
+            font-weight: 700;
+            color: #475569;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 10px;
             border: 1px solid #e2e8f0;
             background: #f8fafc;
-            padding: 0.45rem 0.8rem;
+            padding: 0.85rem 1rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #0284c7;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            border: none;
+            border-radius: 10px;
             font-weight: 700;
-            color: #334155;
-            font-size: 0.8rem;
+            padding: 0.85rem 1.85rem;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(2, 132, 199, 0.35);
+        }
+
+        .btn-light {
+            border-radius: 10px;
+            font-weight: 700;
         }
     </style>
     @endpush

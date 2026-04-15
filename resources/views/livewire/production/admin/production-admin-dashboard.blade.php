@@ -2,30 +2,36 @@
     @push('styles')
     <style>
         .dashboard-wrapper {
-            background-color: #f8faff;
+            background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%);
             min-height: 100vh;
-            padding: 1rem 0;
+            padding: 2rem 0;
         }
 
         /* Stat Cards Row */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 1.25rem;
+            gap: 1.5rem;
             margin-bottom: 2rem;
         }
 
         .sample-card {
-            background: #fff;
-            border-radius: 8px;
-            padding: 1.5rem 1.75rem;
-            border: 1px solid #eef2f6;
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 1.75rem 2rem;
+            border: 1px solid rgba(30, 41, 59, 0.08);
             display: flex;
             flex-direction: column;
             position: relative;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
             height: 140px;
             justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .sample-card:hover {
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
         }
 
         .card-accent {
@@ -33,14 +39,15 @@
             left: 0;
             top: 0;
             height: 100%;
-            width: 4px;
-            border-radius: 8px 0 0 8px;
+            width: 5px;
+            border-radius: 14px 0 0 14px;
+            background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
         }
 
         .card-label {
             font-size: 0.75rem;
             font-weight: 800;
-            color: #94a3b8;
+            color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             margin-bottom: 0.5rem;
@@ -48,15 +55,15 @@
 
         .card-value {
             font-size: 1.85rem;
-            font-weight: 800;
-            color: #1e293b;
+            font-weight: 900;
+            color: #0f172a;
             margin-bottom: 0.15rem;
             letter-spacing: -0.02em;
         }
 
         .card-sub {
             font-size: 0.8rem;
-            color: #fbbf24;
+            color: #10b981;
             font-weight: 700;
         }
 
@@ -64,15 +71,16 @@
             position: absolute;
             top: 1.5rem;
             right: 1.5rem;
-            width: 42px;
-            height: 42px;
-            background: #f1f6fc;
-            border-radius: 10px;
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #0088cc;
-            font-size: 1.15rem;
+            color: #0284c7;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
         }
 
         /* Chart & List Row */
@@ -84,13 +92,18 @@
         }
 
         .section-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 2.25rem;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 2rem;
+            border: 1px solid rgba(30, 41, 59, 0.08);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
             display: flex;
             flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .section-card:hover {
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
         }
 
         .section-header {

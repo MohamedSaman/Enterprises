@@ -2,53 +2,68 @@
     @push('styles')
     <style>
         .dashboard-wrapper {
-            background-color: #f8faff;
+            background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%);
             min-height: 100vh;
-            padding: 1rem 0;
+            padding: 2rem 0;
         }
 
         .section-card {
-            background: #fff;
-            border-radius: 12px;
+            background: #ffffff;
+            border-radius: 14px;
             padding: 2rem;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(30, 41, 59, 0.08);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .section-card:hover {
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
         }
 
         .section-title {
-            font-size: 1.25rem;
-            font-weight: 800;
-            color: #1e293b;
-            margin-bottom: 0.35rem;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
         }
 
         .section-subtitle {
-            font-size: 0.85rem;
-            color: #94a3b8;
-            font-weight: 600;
+            font-size: 0.9rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
         }
 
         .btn-custom {
-            background: #00a3e0;
-            color: #fff;
-            border: 0;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: white;
+            border: none;
+            padding: 0.85rem 1.85rem;
             border-radius: 10px;
-            font-weight: 800;
-            padding: 0.75rem 1.25rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
         }
 
         .btn-custom:hover {
-            color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(2, 132, 199, 0.35);
+            color: white;
         }
 
         .role-pill {
-            border-radius: 999px;
-            padding: 0.35rem 0.7rem;
+            border-radius: 20px;
+            padding: 0.55rem 1.1rem;
             font-size: 0.72rem;
             font-weight: 800;
             text-transform: uppercase;
-            background: #eff6ff;
-            color: #1d4ed8;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            color: #0284c7;
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.15);
         }
 
         .action-btn {
@@ -67,10 +82,10 @@
         }
 
         .detail-box {
-            background: #f8fafc;
+            background: linear-gradient(135deg, #f8fafc 0%, #f0f4fa 100%);
             border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 0.9rem 1rem;
+            border-radius: 12px;
+            padding: 1.2rem 1.5rem;
         }
 
         .detail-label {
@@ -78,13 +93,33 @@
             font-weight: 800;
             color: #64748b;
             text-transform: uppercase;
-            margin-bottom: 0.25rem;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
         }
 
         .detail-value {
             font-weight: 700;
             color: #0f172a;
             word-break: break-word;
+            font-size: 1rem;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            padding: 0.85rem 1rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #0284c7;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
         }
     </style>
     @endpush

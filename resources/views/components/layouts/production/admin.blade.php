@@ -18,12 +18,13 @@
 
 	<style>
 		:root {
-			--bg-main: #f8faff;
+			--bg-main: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%);
 			--surface: #ffffff;
-			--primary: #00a3e0;
-			--primary-soft: #e0f5fe;
+			--primary: #0284c7;
+			--primary-dark: #0369a1;
+			--primary-soft: #eff6ff;
 			--accent: #8a6114;
-			--text-main: #1e293b;
+			--text-main: #0f172a;
 			--text-muted: #64748b;
 			--border: #e2e8f0;
 			--nav-height: 70px;
@@ -44,16 +45,17 @@
 			align-items: center;
 			justify-content: space-between;
 			padding: 0 2rem;
-			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 			position: sticky;
 			top: 0;
 			z-index: 1000;
+			border-bottom: 1px solid var(--border);
 		}
 
 		.brand {
 			font-size: 1.35rem;
-			font-weight: 800;
-			color: #1a202c;
+			font-weight: 900;
+			color: var(--text-main);
 			text-decoration: none;
 			letter-spacing: -0.04em;
 			display: flex;
@@ -61,14 +63,14 @@
 		}
 
 		.brand span {
-			color: #64748b;
-			font-weight: 500;
-			margin-right: 4px;
+			color: var(--primary);
+			font-weight: 700;
+			margin-right: 6px;
 		}
 
 		.nav-center {
 			display: flex;
-			gap: 2rem;
+			gap: 2.5rem;
 			position: absolute;
 			left: 50%;
 			transform: translateX(-50%);
@@ -77,12 +79,13 @@
 
 		.nav-item {
 			text-decoration: none;
-			color: #4a5568 !important;
+			color: var(--text-muted) !important;
 			font-weight: 700 !important;
 			font-size: 0.9rem;
 			padding: 0.5rem 0;
 			position: relative;
-			transition: all 0.2s;
+			transition: all 0.2s ease;
+			letter-spacing: -0.01em;
 		}
 
 		.nav-item:hover {
@@ -90,7 +93,7 @@
 		}
 
 		.nav-item.active {
-			color: #1a202c !important;
+			color: var(--text-main) !important;
 		}
 
 		.nav-item.active::after {
@@ -99,8 +102,8 @@
 			bottom: -8px;
 			left: 0;
 			width: 100%;
-			height: 3px;
-			background: var(--primary);
+			height: 4px;
+			background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
 			border-radius: 100px;
 		}
 
@@ -115,18 +118,23 @@
 		.notification-btn {
 			background: none;
 			border: none;
-			color: #4a5568 !important;
+			color: var(--text-muted) !important;
 			font-size: 1.4rem;
 			position: relative;
 			padding: 0;
 			display: flex;
 			align-items: center;
+			transition: all 0.2s ease;
+		}
+
+		.notification-btn:hover {
+			color: var(--primary) !important;
 		}
 
 		.notification-dot {
 			width: 10px;
 			height: 10px;
-			background: #ef4444;
+			background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 			border: 2px solid #fff;
 			border-radius: 50%;
 			position: absolute;
@@ -152,10 +160,10 @@
 			display: flex;
 			align-items: center;
 			gap: 10px;
-			padding: 5px 12px;
-			border-radius: 99px;
-			transition: all 0.2s;
-			color: #1a202c;
+			padding: 6px 14px;
+			border-radius: 10px;
+			transition: all 0.2s ease;
+			color: var(--text-main);
 			cursor: pointer;
 			border: 1px solid transparent !important;
 			background: transparent !important;
@@ -165,7 +173,7 @@
 
 		.admin-info:hover {
 			background-color: var(--primary-soft) !important;
-			border-color: #e0f2fe !important;
+			border-color: #bfdbfe !important;
 		}
 
 		.admin-info:focus,
@@ -180,30 +188,33 @@
 			width: 38px;
 			height: 38px;
 			border-radius: 50%;
-			background-color: #1e293b;
+			background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
 			color: #ffffff;
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			font-weight: 700;
+			font-weight: 800;
 			font-size: 0.9rem;
-			border: 1px solid #e2e8f0;
+			border: 2px solid white;
 			overflow: hidden;
+			box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2);
 		}
 
 		.admin-name {
 			font-weight: 700;
 			font-size: 0.9rem;
-			color: #334155;
+			color: var(--text-main);
 		}
 
 		.dropdown-item {
-			transition: all 0.2s;
+			transition: all 0.2s ease;
 			font-size: 0.85rem;
+			font-weight: 600;
 		}
 
 		.dropdown-item:hover {
-			background-color: #f8fafc;
+			background-color: linear-gradient(90deg, var(--primary-soft) 0%, rgba(2, 132, 199, 0.05) 100%);
+			color: var(--primary);
 			transform: translateX(3px);
 		}
 
@@ -218,39 +229,55 @@
 			display: none;
 			position: absolute;
 			background-color: #ffffff;
-			min-width: 180px;
-			box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+			min-width: 200px;
+			box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
 			z-index: 1100;
 			border-radius: 12px;
-			padding: 0.5rem;
+			padding: 0.6rem;
 			top: 100%;
 			left: 0;
-			border: 1px solid #f1f5f9;
+			border: 1px solid var(--border);
 		}
 
 		.dropdown-content a {
-			color: #64748b;
-			padding: 0.75rem 1rem;
+			color: var(--text-muted);
+			padding: 0.8rem 1.2rem;
 			text-decoration: none;
-			display: block;
+			display: flex;
+			align-items: center;
+			gap: 0.6rem;
 			font-size: 0.85rem;
 			font-weight: 700;
 			border-radius: 8px;
-			transition: all 0.2s;
+			transition: all 0.2s ease;
 		}
 
 		.dropdown-content a:hover {
-			background-color: var(--primary-soft);
+			background: linear-gradient(90deg, var(--primary-soft) 0%, rgba(2, 132, 199, 0.05) 100%);
 			color: var(--primary);
+			padding-left: 1.4rem;
 		}
 
 		.nav-dropdown:hover .dropdown-content {
 			display: block;
+			animation: slideDown 0.2s ease;
+		}
+
+		@keyframes slideDown {
+			from {
+				opacity: 0;
+				transform: translateY(-8px);
+			}
+
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
 		}
 
 		/* Active state for dropdown parent */
 		.nav-dropdown.active-parent .nav-item {
-			color: #1a202c !important;
+			color: var(--text-main) !important;
 		}
 
 		.nav-dropdown.active-parent .nav-item::after {
@@ -259,8 +286,8 @@
 			bottom: -8px;
 			left: 0;
 			width: 100%;
-			height: 3px;
-			background: var(--primary);
+			height: 4px;
+			background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
 			border-radius: 100px;
 		}
 

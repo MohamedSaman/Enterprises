@@ -2,16 +2,16 @@
     @push('styles')
     <style>
         .salary-report-shell {
-            background: #f8faff;
+            background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%);
             min-height: 100vh;
-            padding: 1rem 0;
+            padding: 2rem 0;
         }
 
         .panel-card {
-            background: #fff;
+            background: #ffffff;
             border-radius: 14px;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(30, 41, 59, 0.08);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
         }
 
         .hero-title {

@@ -1,82 +1,105 @@
-<div class="container-fluid py-3">
+<div class="container-fluid py-3" style="background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%); min-height: 100vh; margin: -1rem; padding: 2rem !important;">
     @push('styles')
     <style>
-        .page-header {
-            display: flex;
-            align-items: center;
-            gap: 0.85rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .page-title {
-            font-size: 1.75rem;
-            font-weight: 800;
-            color: #0f172a;
-            margin: 0;
-        }
-
-        .page-subtitle {
-            color: #64748b;
-            margin: 0;
-            font-weight: 500;
-        }
-
         .collapse-card {
-            background: #fff;
-            border: 1px solid #e8eef5;
-            border-radius: 1rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            background: #ffffff;
+            border: 1px solid rgba(30, 41, 59, 0.08);
+            border-radius: 14px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
             overflow: hidden;
         }
 
         .collapse-header {
             width: 100%;
             border: 0;
-            background: #fff;
-            padding: 1.15rem 1.25rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #f0f4fa 100%);
+            padding: 1.5rem 2rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             font-weight: 700;
             color: #0f172a;
             text-align: left;
+            transition: all 0.3s ease;
+        }
+
+        .collapse-header:hover {
+            background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
         }
 
         .collapse-content {
-            border-top: 1px solid #eef2f6;
-            padding: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            padding: 2rem;
+            background: #ffffff;
         }
 
         .section-card {
-            background: #fff;
-            border: 1px solid #eef2f6;
-            border-radius: 1rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            background: linear-gradient(135deg, #f8fafc 0%, #f0f4fa 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);
             padding: 1.5rem;
         }
 
         .hint-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 1px solid #bfdbfe;
             border-radius: 12px;
             padding: 1rem;
-        }
-
-        .section-spacer {
-            margin-top: 1rem;
+            color: #1e40af;
         }
 
         .btn-custom {
-            background: #00a3e0;
-            color: #fff;
-            border: 0;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: white;
+            border: none;
             border-radius: 10px;
-            font-weight: 800;
-            padding: 0.75rem 1.25rem;
+            font-weight: 700;
+            padding: 0.85rem 1.85rem;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+            transition: all 0.3s ease;
         }
 
         .btn-custom:hover {
-            color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(2, 132, 199, 0.35);
+            color: white;
+        }
+
+        .form-label {
+            font-weight: 700;
+            color: #475569;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-control {
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            padding: 0.85rem 1rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            border-color: #0284c7;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 900;
+            color: #0f172a;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-weight: 500;
+            font-size: 0.9rem;
         }
     </style>
     @endpush
