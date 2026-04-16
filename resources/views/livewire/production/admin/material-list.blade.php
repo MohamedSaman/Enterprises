@@ -214,18 +214,111 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
         }
 
+        .stock-modal-content {
+            overflow: hidden;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            border: 1px solid rgba(14, 165, 233, 0.12);
+            box-shadow: 0 28px 60px -16px rgba(2, 132, 199, 0.18);
+        }
+
         .modal-header-custom {
             padding: 1.5rem 2rem;
             border-bottom: 1px solid #f1f5f9;
+        }
+
+        .stock-modal-header {
+            background: linear-gradient(135deg, #f0f9ff 0%, #ecfeff 52%, #f8fafc 100%);
+            border-bottom: 1px solid rgba(14, 165, 233, 0.12);
+            position: relative;
+        }
+
+        .stock-modal-header::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(180deg, #06b6d4 0%, #22c55e 100%);
+        }
+
+        .stock-modal-title {
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }
+
+        .stock-modal-subtitle {
+            color: #0f766e;
+            font-weight: 700;
         }
 
         .modal-body-custom {
             padding: 2rem;
         }
 
+        .stock-modal-body {
+            background:
+                radial-gradient(circle at top right, rgba(34, 197, 94, 0.08), transparent 30%),
+                radial-gradient(circle at bottom left, rgba(14, 165, 233, 0.08), transparent 34%),
+                #ffffff;
+        }
+
         .modal-footer-custom {
             padding: 1.5rem 2rem;
             border-top: 1px solid #f1f5f9;
+        }
+
+        .stock-modal-footer {
+            background: linear-gradient(180deg, #f8fafc 0%, #eefaf6 100%);
+            border-top: 1px solid rgba(34, 197, 94, 0.12);
+        }
+
+        .stock-modal-table {
+            background: #fff;
+            border: 1px solid #dbeafe;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .stock-modal-table thead {
+            background: linear-gradient(135deg, #0f172a 0%, #0f766e 100%);
+        }
+
+        .stock-modal-table thead th {
+            background: linear-gradient(135deg, #0f172a 0%, #0f766e 100%) !important;
+            color: #fff !important;
+            border-color: rgba(255, 255, 255, 0.12);
+            padding: 1rem 1rem;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .stock-modal-table tbody tr {
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .stock-modal-table tbody tr:hover {
+            background: #f8fbff;
+        }
+
+        .stock-modal-table tbody td,
+        .stock-modal-table tfoot th {
+            border-color: #e2e8f0;
+        }
+
+        .stock-size-pill {
+            background: linear-gradient(135deg, #e0f2fe 0%, #d1fae5 100%);
+            color: #0f172a;
+            font-weight: 800;
+            min-width: 2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        }
+
+        .stock-modal-table tfoot {
+            background: linear-gradient(135deg, #eff6ff 0%, #ecfdf5 100%);
         }
 
         .form-label-custom {
@@ -384,18 +477,18 @@
     @if($showStockModal)
     <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
         <div class="modal-dialog modal-dialog-centered stock-modal-dialog">
-            <div class="modal-content modal-content-custom">
-                <div class="modal-header modal-header-custom">
+            <div class="modal-content modal-content-custom stock-modal-content">
+                <div class="modal-header modal-header-custom stock-modal-header">
                     <div>
-                        <h5 class="modal-title fw-bold mb-1">Material Batch Stock</h5>
-                        <p class="text-muted small mb-0">{{ $view_material_name }} ({{ $view_material_code }})</p>
+                        <h5 class="modal-title stock-modal-title fw-bold mb-1">Material Batch Stock</h5>
+                        <p class="stock-modal-subtitle small mb-0">{{ $view_material_name }} ({{ $view_material_code }})</p>
                     </div>
                     <button type="button" class="btn-close" wire:click="closeStockModal"></button>
                 </div>
-                <div class="modal-body modal-body-custom">
+                <div class="modal-body modal-body-custom stock-modal-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered align-middle mb-0">
-                            <thead class="bg-light">
+                        <table class="table table-bordered align-middle mb-0 stock-modal-table">
+                            <thead>
                                 <tr class="text-uppercase small fw-bold">
                                     <th>Material Batch</th>
                                     <th>Size</th>
@@ -407,13 +500,13 @@
                             <tbody>
                                 @forelse($batchStocks as $row)
                                 <tr>
-                                    <td><span class="fw-semibold">{{ $row['batch_no'] }}</span></td>
+                                    <td><span>{{ $row['batch_no'] }}</span></td>
                                     <td>
-                                        <span class="badge rounded-pill" style="background: #f1f5f9; color: #334155; font-weight: 800;">{{ $row['size'] }}</span>
+                                        <span class="badge rounded-pill stock-size-pill">{{ $row['size'] }}</span>
                                     </td>
-                                    <td class="text-end fw-bold">{{ number_format($row['received_qty'], 2) }}</td>
-                                    <td class="text-end fw-bold">{{ number_format($row['remaining_qty'], 2) }}</td>
-                                    <td class="text-end fw-bold">{{ number_format($row['cost_price'], 2) }}</td>
+                                    <td class="text-end">{{ number_format($row['received_qty'], 2) }}</td>
+                                    <td class="text-end text-success fw-semibold">{{ number_format($row['remaining_qty'], 2) }}</td>
+                                    <td class="text-end">{{ number_format($row['cost_price'], 2) }}</td>
                                 </tr>
                                 @empty
                                 <tr>
@@ -431,7 +524,7 @@
                         </table>
                     </div>
                 </div>
-                <div class="modal-footer modal-footer-custom">
+                <div class="modal-footer modal-footer-custom stock-modal-footer">
                     <button type="button" class="btn btn-light rounded-pill px-4" wire:click="closeStockModal">Close</button>
                 </div>
             </div>
