@@ -9,6 +9,7 @@ use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -23,9 +24,11 @@ class ProductionBatches extends Component
     public string $search = '';
     public bool $showCreateModal = false;
 
-    public string $size = 'S';
+    public string $size = '';
     public string $start_date = '';
     public $production_material_id = '';
+    public $production_material_batch_id = '';
+    public $purchase_batch_no = '';
     public $planned_material_ton = '';
     public $estimated_days = '';
     public int $estimated_target_qty = 0;
@@ -40,6 +43,8 @@ class ProductionBatches extends Component
     public ?int $deletingBatchId = null;
     public string $deletingBatchCode = '';
     public float $availableMaterialTon = 0;
+    public array $selectedBatchSummary = [];
+    public array $estimatedTargetBreakdown = [];
     public array $sizeFactors = [
         'S' => 0.3,
         'M' => 0.5,
@@ -64,6 +69,7 @@ class ProductionBatches extends Component
         $this->refreshAvailableMaterialTon();
         $this->isEditMode = false;
         $this->editingBatchId = null;
+        $this->refreshSuggestedMaterialBatch();
         $this->showCreateModal = true;
     }
 
@@ -74,8 +80,9 @@ class ProductionBatches extends Component
         $this->isEditMode = true;
         $this->editingBatchId = $batch->id;
         $this->loadSizeFactors();
-        $this->size = (string) $batch->size;
         $this->production_material_id = (string) ($batch->production_material_id ?? '');
+        $this->production_material_batch_id = (string) ($batch->production_material_batch_id ?? '');
+        $this->purchase_batch_no = $this->normalizePurchaseBatchNo((string) ($batch->purchase_batch_no ?? ''));
         $this->planned_material_ton = (string) ($batch->planned_material_ton ?: '');
         $this->estimated_days = (string) ($batch->estimated_days ?: '');
         $this->start_date = optional($batch->start_date)->format('Y-m-d') ?: now()->format('Y-m-d');
@@ -103,13 +110,16 @@ class ProductionBatches extends Component
 
     private function resetForm()
     {
-        $this->size = 'S';
         $this->production_material_id = '';
+        $this->production_material_batch_id = '';
+        $this->purchase_batch_no = '';
         $this->planned_material_ton = '';
         $this->estimated_days = '';
         $this->estimated_target_qty = 0;
         $this->target_qty = 0;
         $this->availableMaterialTon = 0;
+        $this->selectedBatchSummary = [];
+        $this->estimatedTargetBreakdown = [];
         $this->start_date = now()->format('Y-m-d');
         $this->supervisor_id = '';
         $this->staff_ids = [];
@@ -126,8 +136,8 @@ class ProductionBatches extends Component
         $this->recalculateEstimatedTarget();
 
         $this->validate([
-            'size' => 'required|in:S,M,L',
             'production_material_id' => 'required|exists:production_materials,id',
+            'purchase_batch_no' => 'required|string|max:120',
             'planned_material_ton' => 'required|numeric|min:0.001',
             'estimated_days' => 'required|integer|min:1',
             'start_date' => 'required|date',
@@ -141,7 +151,7 @@ class ProductionBatches extends Component
         ]);
 
         if ($this->availableMaterialTon <= 0) {
-            $this->addError('planned_material_ton', 'No stock available for the selected material and size.');
+            $this->addError('purchase_batch_no', 'No stock available for the selected purchase batch.');
             return;
         }
 
@@ -155,24 +165,82 @@ class ProductionBatches extends Component
             return;
         }
 
-        DB::transaction(function () {
-            $batch = ProductionBatch::create([
-                'batch_code' => $this->generateBatchCode($this->size),
-                'size' => $this->size,
-                'production_material_id' => (int) $this->production_material_id,
-                'start_date' => $this->start_date,
-                'planned_material_ton' => (float) $this->planned_material_ton,
-                'estimated_days' => (int) $this->estimated_days,
-                'target_qty' => (int) $this->target_qty,
-                'completed_qty' => 0,
-                'supervisor_id' => (int) $this->supervisor_id,
-                'created_by' => (int) Auth::id(),
-                'status' => 'active',
-                'notes' => $this->notes ?: null,
-            ]);
+        $groupedBatches = $this->getSelectedGroupedMaterialBatches();
 
-            $batch->staffMembers()->sync(array_map('intval', $this->staff_ids));
-        });
+        if ($groupedBatches->isEmpty()) {
+            $this->addError('purchase_batch_no', 'Please choose a valid purchase batch group for this material.');
+            return;
+        }
+
+        try {
+            DB::transaction(function () use ($groupedBatches) {
+                $selectedBatch = $groupedBatches->first();
+
+                $lockedBatches = ProductionMaterialBatch::query()
+                    ->lockForUpdate()
+                    ->where('production_material_id', (int) $this->production_material_id)
+                    ->where('remaining_quantity', '>', 0)
+                    ->orderBy('created_at')
+                    ->orderBy('id')
+                    ->get()
+                    ->filter(function ($batch) {
+                        return $this->normalizePurchaseBatchNo((string) $batch->batch_no) === $this->normalizePurchaseBatchNo((string) $this->purchase_batch_no);
+                    })
+                    ->values();
+
+                if ($lockedBatches->isEmpty()) {
+                    throw new \RuntimeException('Selected purchase batch group is no longer available.');
+                }
+
+                $groupedStock = (float) $lockedBatches->sum('remaining_quantity');
+
+                if ((int) $selectedBatch->production_material_id !== (int) $this->production_material_id) {
+                    throw new \RuntimeException('Selected purchase batch group does not match the chosen material.');
+                }
+
+                if ($groupedStock < (float) $this->planned_material_ton) {
+                    throw new \RuntimeException('Selected purchase batch group does not have enough remaining quantity.');
+                }
+
+                $storedSize = $this->resolveSizeForStorage($lockedBatches);
+
+                $batch = ProductionBatch::create([
+                    'batch_code' => $this->generateBatchCode(''),
+                    'size' => $storedSize,
+                    'production_material_id' => (int) $this->production_material_id,
+                    'production_material_batch_id' => (int) $selectedBatch->id,
+                    'purchase_batch_no' => $this->normalizePurchaseBatchNo((string) $this->purchase_batch_no),
+                    'start_date' => $this->start_date,
+                    'planned_material_ton' => (float) $this->planned_material_ton,
+                    'estimated_days' => (int) $this->estimated_days,
+                    'target_qty' => (int) $this->target_qty,
+                    'completed_qty' => 0,
+                    'supervisor_id' => (int) $this->supervisor_id,
+                    'created_by' => (int) Auth::id(),
+                    'status' => 'active',
+                    'notes' => $this->notes ?: null,
+                ]);
+
+                $batch->staffMembers()->sync(array_map('intval', $this->staff_ids));
+
+                $remainingToConsume = (float) $this->planned_material_ton;
+
+                foreach ($lockedBatches as $lockedBatch) {
+                    if ($remainingToConsume <= 0) {
+                        break;
+                    }
+
+                    $consume = min((float) $lockedBatch->remaining_quantity, $remainingToConsume);
+                    $lockedBatch->remaining_quantity = max(0, (float) $lockedBatch->remaining_quantity - $consume);
+                    $lockedBatch->save();
+                    $remainingToConsume -= $consume;
+                }
+            });
+        } catch (\Throwable $exception) {
+            $this->addError('purchase_batch_no', $exception->getMessage());
+            $this->dispatch('alert', ['message' => $exception->getMessage(), 'type' => 'error']);
+            return;
+        }
 
         $this->dispatch('alert', ['message' => 'Production batch created successfully!', 'type' => 'success']);
         $this->closeCreateModal();
@@ -183,7 +251,7 @@ class ProductionBatches extends Component
     public function updateBatch()
     {
         if (!$this->editingBatchId) {
-            $this->addError('size', 'Invalid batch selected for editing.');
+            $this->addError('production_material_batch_id', 'Invalid batch selected for editing.');
             return;
         }
 
@@ -192,8 +260,8 @@ class ProductionBatches extends Component
         $this->recalculateEstimatedTarget();
 
         $this->validate([
-            'size' => 'required|in:S,M,L',
             'production_material_id' => 'required|exists:production_materials,id',
+            'purchase_batch_no' => 'required|string|max:120',
             'planned_material_ton' => 'required|numeric|min:0.001',
             'estimated_days' => 'required|integer|min:1',
             'start_date' => 'required|date',
@@ -207,7 +275,7 @@ class ProductionBatches extends Component
         ]);
 
         if ($this->availableMaterialTon <= 0) {
-            $this->addError('planned_material_ton', 'No stock available for the selected material and size.');
+            $this->addError('purchase_batch_no', 'No stock available for the selected purchase batch.');
             return;
         }
 
@@ -221,32 +289,51 @@ class ProductionBatches extends Component
             return;
         }
 
-        DB::transaction(function () {
-            $batch = ProductionBatch::findOrFail($this->editingBatchId);
+        $groupedBatches = $this->getSelectedGroupedMaterialBatches();
 
-            $batch->update([
-                'size' => $this->size,
-                'production_material_id' => (int) $this->production_material_id,
-                'start_date' => $this->start_date,
-                'planned_material_ton' => (float) $this->planned_material_ton,
-                'estimated_days' => (int) $this->estimated_days,
-                'target_qty' => (int) $this->target_qty,
-                'supervisor_id' => (int) $this->supervisor_id,
-                'notes' => $this->notes ?: null,
-            ]);
+        if ($groupedBatches->isEmpty()) {
+            $this->addError('purchase_batch_no', 'Please choose a valid purchase batch group for this material.');
+            return;
+        }
 
-            $batch->staffMembers()->sync(array_map('intval', $this->staff_ids));
+        $selectedBatch = $groupedBatches->first();
 
-            if ((int) $batch->target_qty > 0 && (int) $batch->completed_qty >= (int) $batch->target_qty) {
-                $batch->status = 'completed';
-                $batch->end_date = $batch->end_date ?: now()->format('Y-m-d');
-            } elseif ((int) $batch->completed_qty < (int) $batch->target_qty) {
-                $batch->status = 'active';
-                $batch->end_date = null;
-            }
+        try {
+            DB::transaction(function () use ($selectedBatch, $groupedBatches) {
+                $batch = ProductionBatch::findOrFail($this->editingBatchId);
 
-            $batch->save();
-        });
+                $storedSize = $this->resolveSizeForStorage($groupedBatches);
+
+                $batch->update([
+                    'size' => $storedSize,
+                    'production_material_id' => (int) $this->production_material_id,
+                    'production_material_batch_id' => (int) $selectedBatch->id,
+                    'purchase_batch_no' => $this->normalizePurchaseBatchNo((string) $this->purchase_batch_no),
+                    'start_date' => $this->start_date,
+                    'planned_material_ton' => (float) $this->planned_material_ton,
+                    'estimated_days' => (int) $this->estimated_days,
+                    'target_qty' => (int) $this->target_qty,
+                    'supervisor_id' => (int) $this->supervisor_id,
+                    'notes' => $this->notes ?: null,
+                ]);
+
+                $batch->staffMembers()->sync(array_map('intval', $this->staff_ids));
+
+                if ((int) $batch->target_qty > 0 && (int) $batch->completed_qty >= (int) $batch->target_qty) {
+                    $batch->status = 'completed';
+                    $batch->end_date = $batch->end_date ?: now()->format('Y-m-d');
+                } elseif ((int) $batch->completed_qty < (int) $batch->target_qty) {
+                    $batch->status = 'active';
+                    $batch->end_date = null;
+                }
+
+                $batch->save();
+            });
+        } catch (\Throwable $exception) {
+            $this->addError('purchase_batch_no', $exception->getMessage());
+            $this->dispatch('alert', ['message' => $exception->getMessage(), 'type' => 'error']);
+            return;
+        }
 
         $this->dispatch('alert', ['message' => 'Production batch updated successfully!', 'type' => 'success']);
         $this->closeCreateModal();
@@ -399,13 +486,65 @@ class ProductionBatches extends Component
             ->get();
     }
 
+    public function getAvailableMaterialBatchesProperty()
+    {
+        if (empty($this->production_material_id)) {
+            return collect();
+        }
+
+        $rows = ProductionMaterialBatch::query()
+            ->where('production_material_id', (int) $this->production_material_id)
+            ->where('remaining_quantity', '>', 0)
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get();
+
+        return $rows->groupBy(function ($row) {
+            return $this->normalizePurchaseBatchNo((string) $row->batch_no);
+        })->map(function ($group, $purchaseBatchNo) {
+            $sizeBreakdown = $group->groupBy(fn($row) => strtoupper((string) $row->size))
+                ->map(function ($sizeRows, $size) {
+                    return [
+                        'size' => $size,
+                        'remaining_quantity' => (float) $sizeRows->sum('remaining_quantity'),
+                    ];
+                })
+                ->sortKeys()
+                ->values()
+                ->all();
+
+            return [
+                'purchase_batch_no' => $purchaseBatchNo,
+                'representative_id' => (int) $group->first()->id,
+                'remaining_quantity' => (float) $group->sum('remaining_quantity'),
+                'size_breakdown' => $sizeBreakdown,
+                'raw_batch_nos' => $group->pluck('batch_no')->values()->all(),
+                'created_at' => optional($group->sortBy('created_at')->first())->created_at,
+            ];
+        })->sortBy(function ($group) {
+            return optional($group['created_at'])->timestamp ?? 0;
+        })->values();
+    }
+
     public function updatedSize(): void
+    {
+        $this->refreshSuggestedMaterialBatch();
+        $this->recalculateEstimatedTarget();
+    }
+
+    public function updatedProductionMaterialId(): void
+    {
+        $this->refreshSuggestedMaterialBatch();
+        $this->recalculateEstimatedTarget();
+    }
+
+    public function updatedProductionMaterialBatchId(): void
     {
         $this->refreshAvailableMaterialTon();
         $this->recalculateEstimatedTarget();
     }
 
-    public function updatedProductionMaterialId(): void
+    public function updatedPurchaseBatchNo(): void
     {
         $this->refreshAvailableMaterialTon();
         $this->recalculateEstimatedTarget();
@@ -416,24 +555,120 @@ class ProductionBatches extends Component
         $this->recalculateEstimatedTarget();
     }
 
-    private function refreshAvailableMaterialTon(): void
+    private function getAvailableMaterialBatchQuery()
     {
-        if (empty($this->production_material_id) || empty($this->size)) {
+        if (empty($this->production_material_id)) {
+            return ProductionMaterialBatch::query()->whereRaw('1 = 0');
+        }
+
+        return ProductionMaterialBatch::query()
+            ->where('production_material_id', (int) $this->production_material_id)
+            ->where('remaining_quantity', '>', 0)
+            ->orderBy('created_at')
+            ->orderBy('id');
+    }
+
+    private function refreshSuggestedMaterialBatch(): void
+    {
+        if (empty($this->production_material_id)) {
+            $this->production_material_batch_id = '';
             $this->availableMaterialTon = 0;
+            $this->purchase_batch_no = '';
+            $this->selectedBatchSummary = [];
+            $this->estimatedTargetBreakdown = [];
             return;
         }
 
-        $this->availableMaterialTon = (float) ProductionMaterialBatch::query()
-            ->where('production_material_id', (int) $this->production_material_id)
-            ->whereRaw('UPPER(COALESCE(size, "")) = ?', [strtoupper((string) $this->size)])
-            ->sum('remaining_quantity');
+        $availableBatches = $this->availableMaterialBatches;
+        $suggestedBatch = $availableBatches->first();
 
-        if ((float) $this->planned_material_ton > $this->availableMaterialTon) {
-            $this->planned_material_ton = $this->availableMaterialTon > 0
-                ? (string) number_format($this->availableMaterialTon, 3, '.', '')
-                : '';
+        if (!$suggestedBatch) {
+            $this->production_material_batch_id = '';
+            $this->availableMaterialTon = 0;
+            $this->planned_material_ton = '';
+            $this->purchase_batch_no = '';
+            $this->selectedBatchSummary = [];
+            $this->estimatedTargetBreakdown = [];
             $this->recalculateEstimatedTarget();
+            return;
         }
+
+        $selectedId = (int) $this->production_material_batch_id;
+        $matchedBatch = $availableBatches->firstWhere('representative_id', $selectedId)
+            ?: $availableBatches->firstWhere('purchase_batch_no', $this->purchase_batch_no);
+
+        if (!$matchedBatch || $this->isEditMode === false) {
+            $this->production_material_batch_id = (string) $suggestedBatch['representative_id'];
+            $this->purchase_batch_no = (string) $suggestedBatch['purchase_batch_no'];
+            $matchedBatch = $suggestedBatch;
+        }
+
+        $this->selectedBatchSummary = $matchedBatch;
+        $this->availableMaterialTon = (float) ($matchedBatch['remaining_quantity'] ?? 0);
+        $this->planned_material_ton = $this->availableMaterialTon > 0
+            ? (string) number_format($this->availableMaterialTon, 3, '.', '')
+            : '';
+
+        $this->recalculateEstimatedTarget();
+    }
+
+    private function refreshAvailableMaterialTon(): void
+    {
+        if (empty($this->purchase_batch_no)) {
+            $this->refreshSuggestedMaterialBatch();
+            return;
+        }
+
+        $group = $this->availableMaterialBatches->firstWhere('purchase_batch_no', $this->purchase_batch_no);
+
+        if (!$group) {
+            $this->refreshSuggestedMaterialBatch();
+            return;
+        }
+
+        $this->production_material_batch_id = (string) ($group['representative_id'] ?? '');
+        $this->availableMaterialTon = (float) ($group['remaining_quantity'] ?? 0);
+        $this->purchase_batch_no = (string) ($group['purchase_batch_no'] ?? '');
+        $this->selectedBatchSummary = $group;
+        $this->planned_material_ton = $this->availableMaterialTon > 0
+            ? (string) number_format($this->availableMaterialTon, 3, '.', '')
+            : '';
+        $this->recalculateEstimatedTarget();
+    }
+
+    private function normalizePurchaseBatchNo(string $batchNo): string
+    {
+        return preg_replace('/^(BT\d{8})[A-Z](-\d{4})$/i', '$1$2', trim($batchNo)) ?? trim($batchNo);
+    }
+
+    private function resolveSizeForStorage(Collection $batches): string
+    {
+        $validSizes = ['S', 'M', 'L'];
+        $firstValid = $batches->pluck('size')
+            ->map(fn($size) => strtoupper(trim((string) $size)))
+            ->first(fn($size) => in_array($size, $validSizes, true));
+
+        return $firstValid ?: 'S';
+    }
+
+    private function getSelectedGroupedMaterialBatches(): Collection
+    {
+        if (empty($this->production_material_id) || empty($this->purchase_batch_no)) {
+            return collect();
+        }
+
+        $normalizedPurchaseBatchNo = $this->normalizePurchaseBatchNo($this->purchase_batch_no);
+
+        return ProductionMaterialBatch::query()
+            ->where('production_material_id', (int) $this->production_material_id)
+            ->where('remaining_quantity', '>', 0)
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get()
+            ->filter(function ($batch) use ($normalizedPurchaseBatchNo) {
+                return $this->normalizePurchaseBatchNo((string) $batch->batch_no) === $normalizedPurchaseBatchNo;
+            })
+            ->values();
     }
 
     private function loadSizeFactors(): void
@@ -457,18 +692,36 @@ class ProductionBatches extends Component
 
     private function recalculateEstimatedTarget(): void
     {
-        $ton = (float) $this->planned_material_ton;
-        $factor = (float) ($this->sizeFactors[$this->size] ?? 0);
+        $summary = $this->selectedBatchSummary ?: $this->availableMaterialBatches->firstWhere('purchase_batch_no', $this->purchase_batch_no);
 
-        if ($ton <= 0 || $factor <= 0) {
+        if (!$summary) {
             $this->estimated_target_qty = 0;
             $this->target_qty = 0;
+            $this->estimatedTargetBreakdown = [];
             return;
         }
 
-        $estimated = (int) floor(($ton * 1000) / $factor);
-        $this->estimated_target_qty = max(0, $estimated);
-        $this->target_qty = $this->estimated_target_qty;
+        $totalEstimated = 0;
+        $breakdown = [];
+
+        foreach (($summary['size_breakdown'] ?? []) as $sizeRow) {
+            $size = (string) ($sizeRow['size'] ?? '');
+            $ton = (float) ($sizeRow['remaining_quantity'] ?? 0);
+            $factor = (float) ($this->sizeFactors[$size] ?? 0);
+            $estimated = ($ton > 0 && $factor > 0) ? (int) floor(($ton * 1000) / $factor) : 0;
+
+            $breakdown[] = [
+                'size' => $size,
+                'ton' => $ton,
+                'estimated' => $estimated,
+            ];
+
+            $totalEstimated += $estimated;
+        }
+
+        $this->estimatedTargetBreakdown = $breakdown;
+        $this->estimated_target_qty = $totalEstimated;
+        $this->target_qty = $totalEstimated;
     }
 
     public function render()
@@ -489,6 +742,7 @@ class ProductionBatches extends Component
             'eligibleStaff' => $this->eligibleStaff,
             'filteredEligibleStaff' => $this->filteredEligibleStaff,
             'materials' => $this->materials,
+            'availableMaterialBatches' => $this->availableMaterialBatches,
             'sizeFactors' => $this->sizeFactors,
             'supervisors' => $this->supervisors,
         ]);

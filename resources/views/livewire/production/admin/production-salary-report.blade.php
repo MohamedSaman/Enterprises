@@ -63,18 +63,22 @@
                 <div class="text-muted">Salary and expense calculation for the selected production batch</div>
                 <a href="{{ route('production.admin.expenses') }}" class="small text-decoration-none">Manage fixed-cost expenses batch wise</a>
             </div>
-            <div class="d-flex gap-2 flex-wrap" style="min-width: 340px; max-width: 100%;">
+            <div class="d-flex gap-2 flex-wrap" style="min-width: 520px; max-width: 100%;">
                 <div class="flex-grow-1">
                     <label class="form-label small fw-bold text-uppercase text-muted mb-1">Batch</label>
                     <select class="form-select" wire:model.live="selectedBatchId">
                         @foreach($batches as $batch)
-                        <option value="{{ $batch->id }}">{{ $batch->batch_code }} - {{ $batch->size }}</option>
+                        <option value="{{ $batch->id }}">{{ $batch->batch_code }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="flex-grow-1">
                     <label class="form-label small fw-bold text-uppercase text-muted mb-1">Manufactured Pcs</label>
                     <input type="number" min="0" class="form-control" wire:model.live="manufactured_qty">
+                </div>
+                <div class="flex-grow-1">
+                    <label class="form-label small fw-bold text-uppercase text-muted mb-1">Extra Salary</label>
+                    <input type="number" min="0" step="0.01" class="form-control" wire:model.live="extra_salary">
                 </div>
             </div>
         </div>
@@ -84,92 +88,71 @@
     <div class="row g-3 mb-4">
         <div class="col-md-3">
             <div class="summary-stat h-100">
-                <div class="label">Manufactured Qty</div>
-                <div class="value">{{ number_format($costStatement['produced_qty']) }} pcs</div>
-                <div class="text-muted small">Target {{ number_format((int) $costStatement['batch']->target_qty) }} pcs</div>
+                <div class="label">Basic Salary Total</div>
+                <div class="value">Rs. {{ number_format($costStatement['basic_salary_total'], 2) }}</div>
+                <div class="text-muted small">Supervisor + workers in this batch</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="summary-stat h-100">
-                <div class="label">Material Cost</div>
-                <div class="value">Rs. {{ number_format($costStatement['material_cost'], 2) }}</div>
-                <div class="text-muted small">{{ number_format($costStatement['planned_ton'], 3) }} ton planned</div>
+                <div class="label">Target Commission</div>
+                <div class="value">Rs. {{ number_format($costStatement['target_commission'], 2) }}</div>
+                <div class="text-muted small">Based on produced pieces</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="summary-stat h-100">
-                <div class="label">Batch Expenses</div>
-                <div class="value">Rs. {{ number_format($costStatement['batch_expenses'], 2) }}</div>
-                <div class="text-muted small">Daily expenses logged by supervisor</div>
+                <div class="label">Extra Salary</div>
+                <div class="value">Rs. {{ number_format($costStatement['extra_salary'], 2) }}</div>
+                <div class="text-muted small">Editable manual amount</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="summary-stat h-100">
-                <div class="label">Net Profit</div>
-                <div class="value {{ $costStatement['profit'] >= 0 ? 'text-success' : 'text-danger' }}">Rs. {{ number_format($costStatement['profit'], 2) }}</div>
-                <div class="text-muted small">Revenue minus total cost</div>
+                <div class="label">Net Salary Payable</div>
+                <div class="value {{ $costStatement['net_salary'] >= 0 ? 'text-success' : 'text-danger' }}">Rs. {{ number_format($costStatement['net_salary'], 2) }}</div>
+                <div class="text-muted small">Gross salary after EPF deduction</div>
             </div>
         </div>
     </div>
 
     <div class="panel-card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h5 class="fw-bold mb-1">Payroll Structure</h5>
+                <div class="text-muted small">Basic salary is pulled from the selected batch supervisor and workers.</div>
+            </div>
+            <div class="soft-note py-2 px-3 mb-0" style="min-width: 280px;">
+                Gross salary = basic salary total + extra salary.
+            </div>
+        </div>
         <div class="row g-3">
             <div class="col-lg-7">
-                <h5 class="fw-bold mb-3">Cost Breakdown</h5>
+                <h5 class="fw-bold mb-3">Batch Basic Salary Breakdown</h5>
                 <div class="table-responsive">
                     <table class="table table-bordered calc-table mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Item</th>
-                                <th class="text-end">Amount</th>
-                                <th class="text-end">Per Pcs</th>
+                                <th>Role</th>
+                                <th>Name</th>
+                                <th class="text-end">Basic Salary</th>
                             </tr>
                         </thead>
                         <tbody>
+                            @forelse($basicSalaryBreakdown as $person)
                             <tr>
-                                <td>Material Cost</td>
-                                <td class="text-end">Rs. {{ number_format($costStatement['material_cost'], 2) }}</td>
-                                <td class="text-end">Rs. {{ number_format($costStatement['material_per_piece'], 2) }}</td>
+                                <td>{{ $person['role'] }}</td>
+                                <td>{{ $person['name'] }}</td>
+                                <td class="text-end">Rs. {{ number_format((float) $person['basic_salary'], 2) }}</td>
                             </tr>
+                            @empty
                             <tr>
-                                <td>Electricity</td>
-                                <td class="text-end">Rs. {{ number_format((float) ($costStatement['fixed_expenses']['Electricity'] ?? 0), 2) }}</td>
-                                <td class="text-end">Rs. {{ number_format($costStatement['produced_qty'] > 0 ? ((float) ($costStatement['fixed_expenses']['Electricity'] ?? 0) / $costStatement['produced_qty']) : 0, 2) }}</td>
+                                <td colspan="3" class="text-center text-muted py-4">No salary records found for this batch.</td>
                             </tr>
-                            <tr>
-                                <td>Packing Expenses</td>
-                                <td class="text-end">Rs. {{ number_format((float) ($costStatement['fixed_expenses']['Packing Expenses'] ?? 0), 2) }}</td>
-                                <td class="text-end">Rs. {{ number_format($costStatement['produced_qty'] > 0 ? ((float) ($costStatement['fixed_expenses']['Packing Expenses'] ?? 0) / $costStatement['produced_qty']) : 0, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td>Depreciation</td>
-                                <td class="text-end">Rs. {{ number_format((float) ($costStatement['fixed_expenses']['Depreciation'] ?? 0), 2) }}</td>
-                                <td class="text-end">Rs. {{ number_format($costStatement['produced_qty'] > 0 ? ((float) ($costStatement['fixed_expenses']['Depreciation'] ?? 0) / $costStatement['produced_qty']) : 0, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td>Transport</td>
-                                <td class="text-end">Rs. {{ number_format((float) ($costStatement['fixed_expenses']['Transport'] ?? 0), 2) }}</td>
-                                <td class="text-end">Rs. {{ number_format($costStatement['produced_qty'] > 0 ? ((float) ($costStatement['fixed_expenses']['Transport'] ?? 0) / $costStatement['produced_qty']) : 0, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td>Hosting Charges</td>
-                                <td class="text-end">Rs. {{ number_format((float) ($costStatement['fixed_expenses']['Hosting Charges'] ?? 0), 2) }}</td>
-                                <td class="text-end">Rs. {{ number_format($costStatement['produced_qty'] > 0 ? ((float) ($costStatement['fixed_expenses']['Hosting Charges'] ?? 0) / $costStatement['produced_qty']) : 0, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td>Sundry Expenses</td>
-                                <td class="text-end">Rs. {{ number_format((float) ($costStatement['fixed_expenses']['Sundry Expenses'] ?? 0), 2) }}</td>
-                                <td class="text-end">Rs. {{ number_format($costStatement['produced_qty'] > 0 ? ((float) ($costStatement['fixed_expenses']['Sundry Expenses'] ?? 0) / $costStatement['produced_qty']) : 0, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td>Supervisor Daily Expenses</td>
-                                <td class="text-end">Rs. {{ number_format((float) ($costStatement['fixed_expenses']['Supervisor Daily Expenses'] ?? 0), 2) }}</td>
-                                <td class="text-end">Rs. {{ number_format($costStatement['produced_qty'] > 0 ? ((float) ($costStatement['fixed_expenses']['Supervisor Daily Expenses'] ?? 0) / $costStatement['produced_qty']) : 0, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-bold">Fixed Cost Total</td>
-                                <td class="text-end fw-bold">Rs. {{ number_format($costStatement['fixed_cost'], 2) }}</td>
-                                <td class="text-end fw-bold">Rs. {{ number_format($costStatement['produced_qty'] > 0 ? $costStatement['fixed_cost'] / $costStatement['produced_qty'] : 0, 2) }}</td>
+                            @endforelse
+                            <tr class="table-light">
+                                <td colspan="2" class="fw-bold">Total Basic Salary</td>
+                                <td class="text-end fw-bold">Rs. {{ number_format($costStatement['basic_salary_total'], 2) }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -188,8 +171,8 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Basic Salary</td>
-                                <td class="text-end">Rs. {{ number_format($costStatement['basic_salary'], 2) }}</td>
+                                <td>Basic Salary Total</td>
+                                <td class="text-end">Rs. {{ number_format($costStatement['basic_salary_total'], 2) }}</td>
                             </tr>
                             <tr>
                                 <td>Target Commission</td>
@@ -197,7 +180,7 @@
                             </tr>
                             <tr>
                                 <td>Extra Salary</td>
-                                <td class="text-end">Rs. {{ number_format($extra_salary, 2) }}</td>
+                                <td class="text-end">Rs. {{ number_format($costStatement['extra_salary'], 2) }}</td>
                             </tr>
                             <tr class="table-warning">
                                 <td class="fw-bold">Gross Salary</td>
@@ -226,6 +209,7 @@
                     <div class="fw-bold mb-1">Commission Rules</div>
                     <div>First {{ number_format($commissionSettings['threshold_items']) }} pcs at Rs. {{ number_format($commissionSettings['rate_upto_threshold'], 2) }} each.</div>
                     <div>After threshold at Rs. {{ number_format($commissionSettings['rate_after_threshold'], 2) }} each.</div>
+                    <div class="mt-2">EPF and ETF are calculated from gross salary after basic salary and extra salary are combined.</div>
                 </div>
             </div>
         </div>

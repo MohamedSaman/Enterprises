@@ -17,8 +17,6 @@ class ProductionSalaryReport extends Component
     public $selectedBatchId = null;
     public $manufactured_qty = 0;
     public $sale_price_per_piece = 400;
-    public $base_salary_pool = 255000;
-    public $target_incentive = 175000;
     public $extra_salary = 0;
     public $epf_employee_rate = 8;
     public $epf_employer_rate = 12;
@@ -83,7 +81,7 @@ class ProductionSalaryReport extends Component
 
     public function getBatchesProperty()
     {
-        return ProductionBatch::with(['material', 'supervisor', 'days'])
+        return ProductionBatch::with(['material', 'supervisor.detail', 'staffMembers.detail', 'days'])
             ->latest()
             ->get();
     }
@@ -94,7 +92,41 @@ class ProductionSalaryReport extends Component
             return null;
         }
 
-        return ProductionBatch::with(['material', 'supervisor', 'days.staff_commissions'])->find($this->selectedBatchId);
+        return ProductionBatch::with(['material', 'supervisor.detail', 'staffMembers.detail', 'days'])->find($this->selectedBatchId);
+    }
+
+    public function getBasicSalaryBreakdownProperty(): array
+    {
+        $batch = $this->selectedBatch;
+
+        if (!$batch) {
+            return [];
+        }
+
+        $breakdown = [];
+
+        if ($batch->supervisor) {
+            $breakdown[] = [
+                'role' => 'Supervisor',
+                'name' => $batch->supervisor->name,
+                'basic_salary' => (float) ($batch->supervisor->detail->basic_salary ?? 0),
+            ];
+        }
+
+        foreach ($batch->staffMembers as $staffMember) {
+            $breakdown[] = [
+                'role' => 'Worker',
+                'name' => $staffMember->name,
+                'basic_salary' => (float) ($staffMember->detail->basic_salary ?? 0),
+            ];
+        }
+
+        return $breakdown;
+    }
+
+    public function getBasicSalaryTotalProperty(): float
+    {
+        return (float) collect($this->basicSalaryBreakdown)->sum('basic_salary');
     }
 
     public function getCostStatementProperty(): array
@@ -106,6 +138,7 @@ class ProductionSalaryReport extends Component
         }
 
         $producedQty = max((int) $this->manufactured_qty, 0);
+        $basicSalaryTotal = round((float) $this->basicSalaryTotal, 2);
         $plannedTon = (float) ($batch->planned_material_ton ?? 0);
         $materialBatchQuery = ProductionMaterialBatch::query()
             ->where('production_material_id', $batch->production_material_id)
@@ -145,8 +178,8 @@ class ProductionSalaryReport extends Component
             ? ($producedQty * $rateUpto)
             : (($threshold * $rateUpto) + (($producedQty - $threshold) * $rateAfter));
 
-        $basicSalary = (float) $this->base_salary_pool;
-        $grossSalary = $basicSalary + (float) $this->target_incentive + (float) $this->extra_salary;
+        $extraSalary = (float) $this->extra_salary;
+        $grossSalary = $basicSalaryTotal + $extraSalary;
         $employeeEpf = round($grossSalary * ((float) $this->epf_employee_rate / 100), 2);
         $employerEpf = round($grossSalary * ((float) $this->epf_employer_rate / 100), 2);
         $etf = round($grossSalary * ((float) $this->etf_rate / 100), 2);
@@ -163,6 +196,7 @@ class ProductionSalaryReport extends Component
         return [
             'batch' => $batch,
             'produced_qty' => $producedQty,
+            'basic_salary_total' => $basicSalaryTotal,
             'planned_ton' => $plannedTon,
             'material_cost' => $materialCost,
             'material_per_piece' => $materialPerPiece,
@@ -171,7 +205,7 @@ class ProductionSalaryReport extends Component
             'fixed_cost' => $fixedCost,
             'staff_commission' => $staffCommission,
             'target_commission' => $targetCommission,
-            'basic_salary' => $basicSalary,
+            'extra_salary' => $extraSalary,
             'gross_salary' => $grossSalary,
             'employee_epf' => $employeeEpf,
             'employer_epf' => $employerEpf,
@@ -189,6 +223,7 @@ class ProductionSalaryReport extends Component
         return view('livewire.production.admin.production-salary-report', [
             'batches' => $this->batches,
             'costStatement' => $this->costStatement,
+            'basicSalaryBreakdown' => $this->basicSalaryBreakdown,
         ]);
     }
 }

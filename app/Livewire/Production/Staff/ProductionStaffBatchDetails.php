@@ -23,6 +23,9 @@ class ProductionStaffBatchDetails extends Component
     public $day_no = null;
     public string $work_date = '';
     public $produced_qty = 0;
+    public $produced_s_qty = 0;
+    public $produced_m_qty = 0;
+    public $produced_l_qty = 0;
     public $expense_amount = 0;
     public string $expense_note = '';
     public array $expense_rows = [];
@@ -49,10 +52,11 @@ class ProductionStaffBatchDetails extends Component
         $this->resetDayForm();
         $this->day_no = ((int) $this->batch->days()->max('day_no')) + 1;
         $this->work_date = now()->format('Y-m-d');
-        $this->expense_rows = [
-            ['label' => 'Electricity', 'amount' => 0, 'note' => ''],
-            ['label' => 'Packing', 'amount' => 0, 'note' => ''],
-        ];
+        $this->expense_rows = [];
+        $this->produced_s_qty = 0;
+        $this->produced_m_qty = 0;
+        $this->produced_l_qty = 0;
+        $this->produced_qty = 0;
         $this->showDayModal = true;
     }
 
@@ -63,7 +67,10 @@ class ProductionStaffBatchDetails extends Component
         $this->editingDayId = $day->id;
         $this->day_no = $day->day_no;
         $this->work_date = optional($day->work_date)->format('Y-m-d') ?? now()->format('Y-m-d');
-        $this->produced_qty = (int) $day->produced_qty;
+        $this->produced_s_qty = (int) ($day->produced_s_qty ?? 0);
+        $this->produced_m_qty = (int) ($day->produced_m_qty ?? 0);
+        $this->produced_l_qty = (int) ($day->produced_l_qty ?? 0);
+        $this->produced_qty = (int) ($day->produced_qty ?? 0);
         $this->expense_amount = (float) $day->expense_amount;
         $this->expense_note = (string) ($day->expense_note ?? '');
         $this->expense_rows = !empty($day->expense_items)
@@ -122,12 +129,35 @@ class ProductionStaffBatchDetails extends Component
         }
     }
 
+    public function updatedProducedSQty(): void
+    {
+        $this->syncProducedTotal();
+    }
+
+    public function updatedProducedMQty(): void
+    {
+        $this->syncProducedTotal();
+    }
+
+    public function updatedProducedLQty(): void
+    {
+        $this->syncProducedTotal();
+    }
+
+    private function syncProducedTotal(): void
+    {
+        $this->produced_qty = (int) $this->produced_s_qty + (int) $this->produced_m_qty + (int) $this->produced_l_qty;
+    }
+
     private function resetDayForm(): void
     {
         $this->editingDayId = null;
         $this->day_no = null;
         $this->work_date = '';
         $this->produced_qty = 0;
+        $this->produced_s_qty = 0;
+        $this->produced_m_qty = 0;
+        $this->produced_l_qty = 0;
         $this->expense_amount = 0;
         $this->expense_note = '';
         $this->expense_rows = [];
@@ -167,11 +197,14 @@ class ProductionStaffBatchDetails extends Component
             'day_no' => 'required|integer|min:1',
             'work_date' => 'required|date',
             'produced_qty' => 'required|integer|min:0',
+            'produced_s_qty' => 'required|integer|min:0',
+            'produced_m_qty' => 'required|integer|min:0',
+            'produced_l_qty' => 'required|integer|min:0',
             'expense_amount' => 'nullable|numeric|min:0',
             'expense_note' => 'nullable|string|max:1000',
-            'expense_rows' => 'required|array|min:1',
-            'expense_rows.*.label' => 'required|string|max:120',
-            'expense_rows.*.amount' => 'required|numeric|min:0',
+            'expense_rows' => 'nullable|array',
+            'expense_rows.*.label' => 'nullable|string|max:120',
+            'expense_rows.*.amount' => 'nullable|numeric|min:0',
             'expense_rows.*.note' => 'nullable|string|max:255',
         ]);
 
@@ -198,6 +231,9 @@ class ProductionStaffBatchDetails extends Component
                     'day_no' => (int) $this->day_no,
                     'work_date' => $this->work_date,
                     'produced_qty' => (int) $this->produced_qty,
+                    'produced_s_qty' => (int) $this->produced_s_qty,
+                    'produced_m_qty' => (int) $this->produced_m_qty,
+                    'produced_l_qty' => (int) $this->produced_l_qty,
                     'expense_amount' => $expenseTotal,
                     'expense_note' => $this->expense_note ?: null,
                     'expense_items' => $normalizedExpenseRows,
@@ -223,6 +259,41 @@ class ProductionStaffBatchDetails extends Component
         $this->dispatch('alert', ['message' => 'Daily log saved successfully.', 'type' => 'success']);
     }
 
+    public function getEstimatedDailyTargetProperty(): int
+    {
+        $targetQty = max(0, (int) ($this->batch->target_qty ?? 0));
+        $estimatedDays = max(1, (int) ($this->batch->estimated_days ?? 0));
+        $completedDays = (int) $this->batch->days->count();
+        $producedSoFar = (int) $this->batch->days->sum('produced_qty');
+
+        $remainingTarget = max($targetQty - $producedSoFar, 0);
+        $remainingDays = max($estimatedDays - $completedDays, 1);
+
+        return (int) round($remainingTarget / $remainingDays);
+    }
+
+    public function getDayLogsWithEstimateProperty()
+    {
+        $targetQty = max(0, (int) ($this->batch->target_qty ?? 0));
+        $estimatedDays = max(1, (int) ($this->batch->estimated_days ?? 0));
+        $cumulativeProduced = 0;
+
+        return $this->batch->days
+            ->sortBy('day_no')
+            ->values()
+            ->map(function ($log, $index) use ($targetQty, $estimatedDays, &$cumulativeProduced) {
+                $remainingTargetBeforeDay = max($targetQty - $cumulativeProduced, 0);
+                $remainingDaysBeforeDay = max($estimatedDays - (int) $index, 1);
+                $dynamicEstimate = (int) round($remainingTargetBeforeDay / $remainingDaysBeforeDay);
+
+                $log->dynamic_estimate_target = $dynamicEstimate;
+
+                $cumulativeProduced += (int) ($log->produced_qty ?? 0);
+
+                return $log;
+            });
+    }
+
     public function getExpenseRowsTotalProperty(): float
     {
         return (float) collect($this->expense_rows)->sum(fn($row) => (float) ($row['amount'] ?? 0));
@@ -234,6 +305,9 @@ class ProductionStaffBatchDetails extends Component
 
         return [
             'produced' => (int) $days->sum('produced_qty'),
+            'produced_s' => (int) $days->sum('produced_s_qty'),
+            'produced_m' => (int) $days->sum('produced_m_qty'),
+            'produced_l' => (int) $days->sum('produced_l_qty'),
             'expense' => (float) $days->sum('expense_amount'),
             'days' => (int) $days->count(),
         ];
@@ -243,8 +317,9 @@ class ProductionStaffBatchDetails extends Component
     {
         return view('livewire.production.staff.production-staff-batch-details', [
             'totals' => $this->totals,
-            'dayLogs' => $this->batch->days->sortByDesc('day_no')->values(),
+            'dayLogs' => $this->dayLogsWithEstimate->sortByDesc('day_no')->values(),
             'expenseRowsTotal' => $this->expenseRowsTotal,
+            'estimatedDailyTarget' => $this->estimatedDailyTarget,
         ]);
     }
 }

@@ -13,6 +13,8 @@ class ProductionBatch extends Model
         'batch_code',
         'size',
         'production_material_id',
+        'production_material_batch_id',
+        'purchase_batch_no',
         'start_date',
         'end_date',
         'estimated_days',
@@ -35,6 +37,11 @@ class ProductionBatch extends Model
     public function material()
     {
         return $this->belongsTo(ProductionMaterial::class, 'production_material_id');
+    }
+
+    public function materialBatch()
+    {
+        return $this->belongsTo(ProductionMaterialBatch::class, 'production_material_batch_id');
     }
 
     public function supervisor()

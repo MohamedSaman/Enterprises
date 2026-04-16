@@ -5,6 +5,7 @@ namespace App\Livewire\Production\Admin;
 use App\Models\ProductionBatch;
 use App\Models\ProductionBatchDay;
 use App\Models\ProductionMaterial;
+use App\Models\ProductionMaterialBatch;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -389,21 +390,138 @@ class ProductionBatchDetails extends Component
     {
         $days = $this->batch->days;
 
+        $sizeFactors = Setting::query()
+            ->whereIn('key', [
+                'production_size_factor_s',
+                'production_size_factor_m',
+                'production_size_factor_l',
+            ])
+            ->pluck('value', 'key');
+
+        $factors = [
+            'S' => (float) ($sizeFactors['production_size_factor_s'] ?? 0.3),
+            'M' => (float) ($sizeFactors['production_size_factor_m'] ?? 0.5),
+            'L' => (float) ($sizeFactors['production_size_factor_l'] ?? 0.75),
+        ];
+
+        $batchSize = strtoupper((string) ($this->batch->size ?? ''));
+
+        $approxUsedTon = $days->sum(function ($day) use ($factors, $batchSize) {
+            $sQty = (int) ($day->produced_s_qty ?? 0);
+            $mQty = (int) ($day->produced_m_qty ?? 0);
+            $lQty = (int) ($day->produced_l_qty ?? 0);
+
+            $hasSizeWiseCounts = ($sQty + $mQty + $lQty) > 0;
+
+            if ($hasSizeWiseCounts) {
+                return (($sQty * $factors['S']) + ($mQty * $factors['M']) + ($lQty * $factors['L'])) / 1000;
+            }
+
+            $producedQty = (int) ($day->produced_qty ?? 0);
+            $factor = (float) ($factors[$batchSize] ?? 0);
+
+            return ($producedQty > 0 && $factor > 0)
+                ? (($producedQty * $factor) / 1000)
+                : 0;
+        });
+
         $totalCommission = $days->sum(function ($d) {
             return collect($d->staff_commissions ?? [])->sum('amount');
         });
 
         return [
             'produced' => (int) $days->sum('produced_qty'),
+            'produced_s' => (int) $days->sum('produced_s_qty'),
+            'produced_m' => (int) $days->sum('produced_m_qty'),
+            'produced_l' => (int) $days->sum('produced_l_qty'),
+            'approx_used_ton' => (float) $approxUsedTon,
             'expenses' => (float) $days->sum('expense_amount'),
             'commissions' => (float) $totalCommission,
             'days' => (int) $days->count(),
         ];
     }
 
+    public function getEstimatedDailyTargetProperty(): int
+    {
+        $targetQty = max(1, (int) ($this->batch->target_qty ?? 0));
+        $producedSoFar = (int) ($this->totals['produced'] ?? 0);
+        $estimatedDays = max(1, (int) ($this->batch->estimated_days ?? 0));
+        $completedDays = (int) ($this->totals['days'] ?? 0);
+
+        $remainingTarget = max($targetQty - $producedSoFar, 0);
+        $remainingDays = max($estimatedDays - $completedDays, 1);
+
+        return (int) round($remainingTarget / $remainingDays);
+    }
+
     public function getExpenseRowsTotalProperty(): float
     {
         return (float) collect($this->expense_rows)->sum(fn($row) => (float) ($row['amount'] ?? 0));
+    }
+
+    public function getEstimatedTargetSizeBreakdownProperty(): array
+    {
+        $sizeFactors = Setting::query()
+            ->whereIn('key', [
+                'production_size_factor_s',
+                'production_size_factor_m',
+                'production_size_factor_l',
+            ])
+            ->pluck('value', 'key');
+
+        $factors = [
+            'S' => (float) ($sizeFactors['production_size_factor_s'] ?? 0.3),
+            'M' => (float) ($sizeFactors['production_size_factor_m'] ?? 0.5),
+            'L' => (float) ($sizeFactors['production_size_factor_l'] ?? 0.75),
+        ];
+
+        $rows = collect();
+
+        if (!empty($this->batch->purchase_batch_no)) {
+            $normalized = $this->normalizePurchaseBatchNo((string) $this->batch->purchase_batch_no);
+
+            $rows = ProductionMaterialBatch::query()
+                ->where('production_material_id', (int) $this->batch->production_material_id)
+                ->orderBy('created_at')
+                ->orderBy('id')
+                ->get()
+                ->filter(function ($row) use ($normalized) {
+                    return $this->normalizePurchaseBatchNo((string) $row->batch_no) === $normalized;
+                })
+                ->values();
+        }
+
+        if ($rows->isEmpty() && !empty($this->batch->production_material_batch_id)) {
+            $single = ProductionMaterialBatch::query()->find($this->batch->production_material_batch_id);
+            if ($single) {
+                $rows = collect([$single]);
+            }
+        }
+
+        if ($rows->isEmpty()) {
+            return [];
+        }
+
+        return $rows->groupBy(fn($row) => strtoupper((string) $row->size))
+            ->map(function ($sizeRows, $size) use ($factors) {
+                $ton = (float) $sizeRows->sum('quantity');
+                $factor = (float) ($factors[$size] ?? 0);
+                $estimated = ($ton > 0 && $factor > 0) ? (int) floor(($ton * 1000) / $factor) : 0;
+
+                return [
+                    'size' => $size,
+                    'ton' => $ton,
+                    'estimated' => $estimated,
+                ];
+            })
+            ->sortKeys()
+            ->values()
+            ->all();
+    }
+
+    private function normalizePurchaseBatchNo(string $batchNo): string
+    {
+        return preg_replace('/^(BT\d{8})[A-Z](-\d{4})$/i', '$1$2', trim($batchNo)) ?? trim($batchNo);
     }
 
     public function render()
@@ -419,6 +537,8 @@ class ProductionBatchDetails extends Component
             'selectedDay' => $selectedDay,
             'materials' => $this->materials,
             'totals' => $this->totals,
+            'estimatedDailyTarget' => $this->estimatedDailyTarget,
+            'estimatedTargetSizeBreakdown' => $this->estimatedTargetSizeBreakdown,
             'commissionSettings' => $this->commissionSettings,
             'calculatedTotalCommission' => $this->calculateTotalCommission((int) $this->produced_qty),
         ]);

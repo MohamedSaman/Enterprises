@@ -44,6 +44,186 @@
             color: #0284c7;
             box-shadow: 0 2px 6px rgba(2, 132, 199, 0.15);
         }
+
+        .estimate-card {
+            margin-top: 1.2rem;
+            border: 1px solid #dbeafe;
+            border-radius: 14px;
+            background:
+                radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 32%),
+                linear-gradient(135deg, #f8fbff 0%, #eef8ff 100%);
+            padding: 1rem;
+        }
+
+        .estimate-card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .estimate-card-title {
+            font-size: 1rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .estimate-card-sub {
+            font-size: 0.8rem;
+            color: #475569;
+            margin-top: 0.2rem;
+        }
+
+        .estimate-toggle {
+            border: 0;
+            border-radius: 10px;
+            padding: 0.55rem 0.95rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #ffffff;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            box-shadow: 0 6px 16px rgba(2, 132, 199, 0.24);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+        }
+
+        .estimate-toggle:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(2, 132, 199, 0.28);
+        }
+
+        .estimate-toggle i {
+            transition: transform 0.25s ease;
+        }
+
+        .estimate-collapse {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transform: translateY(-6px);
+            transition: max-height 0.45s ease, opacity 0.3s ease, transform 0.3s ease, margin-top 0.3s ease;
+            margin-top: 0;
+        }
+
+        .estimate-collapse.show {
+            max-height: 700px;
+            opacity: 1;
+            transform: translateY(0);
+            margin-top: 0.9rem;
+        }
+
+        .estimate-toggle[aria-expanded="true"] i {
+            transform: rotate(180deg);
+        }
+
+        .estimate-table-wrap {
+            border: 1px solid #cfe3fb;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #ffffff;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .estimate-table thead th {
+            background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
+            color: #0f172a;
+            font-size: 0.82rem;
+            font-weight: 900;
+            letter-spacing: 0.02em;
+            border-bottom: 1px solid #dbeafe;
+        }
+
+        .estimate-table td,
+        .estimate-table th {
+            padding: 0.62rem 0.78rem;
+        }
+
+        .estimate-table tbody tr:nth-child(odd) {
+            background: #fbfdff;
+        }
+
+        .estimate-table tbody tr:hover {
+            background: #f0f9ff;
+        }
+
+        .estimate-table tfoot th {
+            background: #f8fafc;
+            font-size: 0.84rem;
+            border-top: 1px solid #dbeafe;
+        }
+
+        .summary-progress-card {
+            border: 1px solid #dbeafe;
+            border-radius: 12px;
+            padding: 0.9rem;
+            height: 100%;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+        }
+
+        .summary-progress-card .label {
+            font-size: 0.73rem;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.4rem;
+        }
+
+        .summary-progress-card .value {
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin-bottom: 0.2rem;
+        }
+
+        .summary-progress-card .sub {
+            font-size: 0.77rem;
+            color: #64748b;
+            margin-bottom: 0.45rem;
+        }
+
+        .mini-progress-track {
+            height: 8px;
+            border-radius: 999px;
+            background: #e2e8f0;
+            overflow: hidden;
+            box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08);
+        }
+
+        .mini-progress-fill {
+            height: 100%;
+            border-radius: inherit;
+            transition: width 0.3s ease;
+        }
+
+        .mini-progress-fill.material {
+            background: linear-gradient(90deg, #0284c7 0%, #0ea5e9 100%);
+        }
+
+        .mini-progress-fill.target {
+            background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+        }
+
+        .mini-progress-fill.days {
+            background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .mini-progress-fill.workers {
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        }
+
+        .mini-progress-meta {
+            margin-top: 0.35rem;
+            display: flex;
+            justify-content: space-between;
+            gap: 0.4rem;
+            font-size: 0.73rem;
+            font-weight: 700;
+            color: #475569;
+        }
     </style>
     @endpush
 
@@ -52,7 +232,7 @@
             <div>
                 <h4 class="fw-bold mb-1">{{ $batch->batch_code }}</h4>
                 <div class="text-muted small">
-                    Size {{ $batch->size }} | Material: {{ $batch->material->name ?? '-' }} | Supervisor: {{ $batch->supervisor->name ?? '-' }}
+                    Material: {{ $batch->material->name ?? '-' }} | Supervisor: {{ $batch->supervisor->name ?? '-' }}
                 </div>
             </div>
             <div class="d-flex align-items-center gap-2">
@@ -60,37 +240,144 @@
                 <span class="summary-chip">Expenses: {{ number_format($totals['expenses'], 2) }}</span>
                 <span class="summary-chip">Commissions: {{ number_format($totals['commissions'], 2) }}</span>
                 <span class="summary-chip">Status: {{ strtoupper($batch->status) }}</span>
-                @if($batch->status !== 'completed')
-                <button class="btn btn-sm btn-success" wire:click="completeBatch">Mark Completed</button>
-                @endif
             </div>
         </div>
     </div>
 
     <div class="section-card p-4 mb-3">
+        @php
+        $materialAvailableTon = max((float) collect($estimatedTargetSizeBreakdown)->sum('ton'), (float) ($batch->planned_material_ton ?? 0));
+        $materialUsedTon = (float) ($totals['approx_used_ton'] ?? 0);
+        $materialProgress = $materialAvailableTon > 0 ? min(100, round(($materialUsedTon / $materialAvailableTon) * 100)) : 0;
+
+        $targetQty = max(1, (int) ($batch->target_qty ?? 0));
+        $producedQty = (int) ($totals['produced'] ?? 0);
+        $targetProgress = min(100, round(($producedQty / $targetQty) * 100));
+
+        $estimatedDays = max(1, (int) ($batch->estimated_days ?? 0));
+        $finishedDays = (int) ($totals['days'] ?? 0);
+        $daysProgress = min(100, round(($finishedDays / $estimatedDays) * 100));
+
+        $workerCount = (int) $batch->staffMembers->count();
+        $hasSupervisor = !empty($batch->supervisor_id);
+        $teamReadyUnits = $workerCount + ($hasSupervisor ? 1 : 0);
+        $workersProgress = min(100, round(($teamReadyUnits / 2) * 100));
+        @endphp
         <div class="row g-3">
             <div class="col-md-3">
-                <div class="p-3 border rounded h-100 bg-light">
-                    <div class="text-muted small mb-1">Planned Material</div>
-                    <div class="fw-bold">{{ number_format((float) ($batch->planned_material_ton ?? 0), 3) }} ton</div>
+                <div class="summary-progress-card">
+                    <div class="label">Product Material</div>
+                    <div class="value">{{ number_format($materialUsedTon, 3) }} / {{ number_format($materialAvailableTon, 3) }} ton</div>
+                    <div class="sub">Approx used from produced size-wise counts</div>
+                    <div class="mini-progress-track">
+                        <div class="mini-progress-fill material" style="width: {{ $materialProgress }}%;"></div>
+                    </div>
+                    <div class="mini-progress-meta">
+                        <span>Available: {{ number_format(max($materialAvailableTon - $materialUsedTon, 0), 3) }} ton</span>
+                        <span>{{ $materialProgress }}%</span>
+                    </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="p-3 border rounded h-100 bg-light">
-                    <div class="text-muted small mb-1">Estimated Target</div>
-                    <div class="fw-bold">{{ number_format((int) ($batch->target_qty ?? 0)) }} pcs</div>
+                <div class="summary-progress-card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.8rem; margin-bottom: 0.6rem; flex-wrap: wrap;">
+                        <div class="label" style="flex-shrink: 0;">Estimated Target</div>
+                        <div style="font-size: 0.85rem; font-weight: 800; color: #fff; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding: 0.4rem 0.8rem; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);">
+                            ⚡ Daily: {{ number_format($estimatedDailyTarget) }} pcs
+                        </div>
+                    </div>
+                    <div class="value">{{ number_format($producedQty) }} / {{ number_format($targetQty) }} pcs</div>
+                    <div class="sub">Produced vs target quantity</div>
+                    <div class="mini-progress-track">
+                        <div class="mini-progress-fill target" style="width: {{ $targetProgress }}%;"></div>
+                    </div>
+                    <div class="mini-progress-meta">
+                        <span>Remaining: {{ number_format(max($targetQty - $producedQty, 0)) }} pcs</span>
+                        <span>{{ $targetProgress }}%</span>
+                    </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="p-3 border rounded h-100 bg-light">
-                    <div class="text-muted small mb-1">Estimated Days</div>
-                    <div class="fw-bold">{{ number_format((int) ($batch->estimated_days ?? 0)) }} days</div>
+                <div class="summary-progress-card">
+                    <div class="label">Estimated Days</div>
+                    <div class="value">{{ number_format($finishedDays) }} / {{ number_format($estimatedDays) }} days</div>
+                    <div class="sub">Completed days vs estimated</div>
+                    <div class="mini-progress-track">
+                        <div class="mini-progress-fill days" style="width: {{ $daysProgress }}%;"></div>
+                    </div>
+                    <div class="mini-progress-meta">
+                        <span>Remaining: {{ number_format(max($estimatedDays - $finishedDays, 0)) }} days</span>
+                        <span>{{ $daysProgress }}%</span>
+                    </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="p-3 border rounded h-100 bg-light">
-                    <div class="text-muted small mb-1">Workers Assigned</div>
-                    <div class="fw-bold">{{ $batch->staffMembers->count() }} workers</div>
+                <div class="summary-progress-card">
+                    <div class="label">Workers</div>
+                    <div class="value">{{ $workerCount }} workers{{ $hasSupervisor ? ' + supervisor' : '' }}</div>
+                    <div class="sub">Team assignment readiness</div>
+                    <div class="mini-progress-track">
+                        <div class="mini-progress-fill workers" style="width: {{ $workersProgress }}%;"></div>
+                    </div>
+                    <div class="mini-progress-meta">
+                        <span>{{ $hasSupervisor ? 'Supervisor assigned' : 'Supervisor missing' }}</span>
+                        <span>{{ $workersProgress }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="estimate-card" id="estimate-target-card">
+            <div class="estimate-card-head">
+                <div>
+                    <h6 class="estimate-card-title">Estimated Target Size Wise</h6>
+                    <div class="estimate-card-sub">Click to view detailed size allocation and totals</div>
+                </div>
+                <button
+                    type="button"
+                    class="estimate-toggle"
+                    id="estimate-target-toggle"
+                    aria-expanded="false"
+                    aria-controls="estimate-target-collapse">
+                    <span class="estimate-toggle-label">View Breakdown</span> <i class="bi bi-chevron-down ms-1"></i>
+                </button>
+            </div>
+
+            <div class="estimate-collapse" id="estimate-target-collapse">
+                <div class="estimate-table-wrap">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered align-middle mb-0 estimate-table">
+                            <thead>
+                                <tr>
+                                    <th>Size</th>
+                                    <th class="text-end">Material (ton)</th>
+                                    <th class="text-end">Estimated Target</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($estimatedTargetSizeBreakdown as $row)
+                                <tr>
+                                    <td class="fw-bold">{{ $row['size'] }}</td>
+                                    <td class="text-end">{{ number_format((float) $row['ton'], 3) }}</td>
+                                    <td class="text-end fw-bold">{{ number_format((int) $row['estimated']) }} pcs</td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">No size-wise estimate data available for this batch.</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                            @if(!empty($estimatedTargetSizeBreakdown))
+                            <tfoot>
+                                <tr>
+                                    <th>Total</th>
+                                    <th class="text-end">{{ number_format(collect($estimatedTargetSizeBreakdown)->sum('ton'), 3) }}</th>
+                                    <th class="text-end">{{ number_format((int) collect($estimatedTargetSizeBreakdown)->sum('estimated')) }} pcs</th>
+                                </tr>
+                            </tfoot>
+                            @endif
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -105,14 +392,6 @@
                     Day {{ $day->day_no }}
                 </button>
                 @endforeach
-
-                @if($batch->status !== 'completed')
-                <div class="mt-3">
-                    <button class="btn btn-primary w-100" wire:click="openDayModal">
-                        <i class="bi bi-plus-lg me-1"></i> Add Day Log
-                    </button>
-                </div>
-                @endif
             </div>
 
             <div class="col-lg-9 p-4">
@@ -127,7 +406,6 @@
                                 <th class="text-end">Produced</th>
                                 <th class="text-end">Expenses</th>
                                 <th class="text-end">Commissions</th>
-                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -141,17 +419,10 @@
                                     {{ number_format(collect($day->staff_commissions ?? [])->sum('amount'), 2) }}
 
                                 </td>
-                                <td>
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <button type="button" class="btn btn-sm btn-light" wire:click="openViewModal({{ $day->id }})">View</button>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" wire:click="openEditModal({{ $day->id }})">Edit</button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" wire:click="confirmDeleteDay({{ $day->id }})">Delete</button>
-                                    </div>
-                                </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center py-4 text-muted">No day logs yet.</td>
+                                <td colspan="5" class="text-center py-4 text-muted">No day logs yet.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -439,3 +710,23 @@
     </div>
     @endif
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleButton = document.getElementById('estimate-target-toggle');
+        const collapsePanel = document.getElementById('estimate-target-collapse');
+
+        if (!toggleButton || !collapsePanel) {
+            return;
+        }
+
+        toggleButton.addEventListener('click', function() {
+            const isOpen = collapsePanel.classList.toggle('show');
+            toggleButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            const label = toggleButton.querySelector('.estimate-toggle-label');
+            if (label) {
+                label.textContent = isOpen ? 'Hide Breakdown' : 'View Breakdown';
+            }
+        });
+    });
+</script>

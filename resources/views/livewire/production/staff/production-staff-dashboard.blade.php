@@ -2,9 +2,12 @@
     @push('styles')
     <style>
         .dashboard-wrapper {
-            background-color: #f8faff;
             min-height: 100vh;
-            padding: 1rem 0;
+            padding: 1.2rem 0 2rem;
+            background:
+                radial-gradient(circle at top left, rgba(14, 165, 233, 0.12), transparent 30%),
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.10), transparent 24%),
+                linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
         }
 
         .stats-grid {
@@ -15,18 +18,22 @@
         }
 
         .stat-card {
-            background: #fff;
-            border: 1px solid #e8eef5;
-            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 16px;
             padding: 1rem;
+            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.05);
         }
 
         .chart-card,
         .list-card {
-            background: #fff;
-            border: 1px solid #e8eef5;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 16px;
             padding: 1.25rem;
+            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.05);
         }
 
         .chart-wrap {
@@ -79,10 +86,51 @@
         }
 
         .panel {
-            background: #fff;
-            border: 1px solid #e8eef5;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 16px;
             padding: 1.25rem;
+            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.05);
+        }
+
+        .dashboard-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            background: #e0f2fe;
+            color: #0369a1;
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .dashboard-title {
+            font-size: 1.35rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin-bottom: 0.2rem;
+        }
+
+        .metric-sub strong {
+            color: #0f172a;
+        }
+
+        .chart-card h5,
+        .list-card h5 {
+            color: #0f172a;
+        }
+
+        .recent-badge {
+            display: inline-flex;
+            padding: 0.25rem 0.5rem;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 0.72rem;
+            font-weight: 800;
         }
 
         @media (max-width: 992px) {
@@ -101,10 +149,11 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h4 class="fw-bold mb-1">Supervisor Dashboard</h4>
+            <span class="dashboard-badge mb-2">Production Control</span>
+            <div class="dashboard-title">Supervisor Dashboard</div>
             <p class="text-muted mb-0">Track your assigned production batches and today's performance.</p>
         </div>
-        <a href="{{ route('production.staff.batches') }}" class="btn btn-primary">
+        <a href="{{ route('production.staff.batches') }}" class="btn btn-primary rounded-pill">
             <i class="bi bi-list-ul me-1"></i> My Batches
         </a>
     </div>
@@ -164,6 +213,7 @@
                         <div class="recent-sub">{{ $item['work_date'] }} | Size {{ $item['size'] }} | {{ $item['note'] }}</div>
                     </div>
                     <div class="text-end">
+                        <div class="recent-badge mb-1">Recent entry</div>
                         <div class="fw-bold">{{ number_format($item['produced_qty']) }} items</div>
                         <div class="recent-sub">{{ number_format($item['expense_amount'], 2) }} expense</div>
                     </div>

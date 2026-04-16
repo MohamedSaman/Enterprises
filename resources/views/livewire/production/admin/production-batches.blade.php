@@ -167,6 +167,18 @@
             background: rgba(255, 255, 255, 0.7);
         }
 
+        .batch-step-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .batch-step-actions .btn {
+            min-width: 130px;
+        }
+
         #batch-tab-planning:checked~.batch-tab-buttons .batch-tab-button-planning,
         #batch-tab-workers:checked~.batch-tab-buttons .batch-tab-button-workers {
             background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
@@ -249,6 +261,68 @@
             color: #64748b;
             line-height: 1.3;
             margin-top: 0.15rem;
+        }
+
+        .stock-suggestion {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.7rem;
+            border-radius: 999px;
+            background: #ecfeff;
+            color: #0f766e;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .batch-summary-card {
+            background: #ffffff;
+            border: 1px solid #dbeafe;
+            border-radius: 12px;
+            padding: 0.9rem;
+        }
+
+        .batch-summary-title {
+            font-size: 0.78rem;
+            font-weight: 900;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.6rem;
+        }
+
+        .batch-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.5rem;
+        }
+
+        .batch-summary-item {
+            background: linear-gradient(135deg, #f8fbff 0%, #eefaf6 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.75rem;
+        }
+
+        .batch-summary-item-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .batch-summary-item-value {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .breakdown-table th,
+        .breakdown-table td {
+            font-size: 0.82rem;
+            padding: 0.55rem 0.7rem;
         }
 
         .section-label {
@@ -357,6 +431,41 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
             border-color: #cbd5e1;
+        }
+
+        .value-progress-box {
+            min-width: 200px;
+            max-width: 250px;
+            margin-left: auto;
+        }
+
+        .value-progress-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.8rem;
+            margin-bottom: 0.35rem;
+            color: #334155;
+            font-weight: 700;
+        }
+
+        .value-progress-pct {
+            color: #0f172a;
+        }
+
+        .value-progress-track {
+            height: 8px;
+            border-radius: 999px;
+            background: #e2e8f0;
+            overflow: hidden;
+            box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08);
+        }
+
+        .value-progress-fill {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #0ea5e9 0%, #2563eb 100%);
         }
 
         .modal-body {
@@ -470,7 +579,7 @@
                 <thead>
                     <tr class="text-uppercase small fw-bold">
                         <th>Batch</th>
-                        <th>Size</th>
+
                         <th>Supervisor</th>
                         <th class="text-center">Staff</th>
                         <th class="text-center">Days</th>
@@ -483,11 +592,25 @@
                     @forelse($batches as $batch)
                     <tr style="cursor: pointer;" data-href="{{ route('production.admin.batch-details', $batch->id) }}" onclick="window.location.href=this.dataset.href;">
                         <td class="fw-bold">{{ $batch->batch_code }}</td>
-                        <td><span class="badge rounded-pill bg-secondary-subtle text-dark">{{ $batch->size }}</span></td>
                         <td>{{ $batch->supervisor->name ?? '-' }}</td>
                         <td class="text-center">{{ $batch->staffMembers->count() }}</td>
                         <td class="text-center">{{ $batch->days->count() }}</td>
-                        <td class="text-end fw-bold">{{ number_format($batch->completed_qty) }} / {{ number_format($batch->target_qty) }}</td>
+                        <td>
+                            @php
+                            $targetQty = max(1, (int) $batch->target_qty);
+                            $completedQty = (int) $batch->completed_qty;
+                            $progressPercent = min(100, round(($completedQty / $targetQty) * 100));
+                            @endphp
+                            <div class="value-progress-box text-end">
+                                <div class="value-progress-meta">
+                                    <span>{{ number_format($completedQty) }} / {{ number_format($targetQty) }}</span>
+                                    <span class="value-progress-pct">{{ $progressPercent }}%</span>
+                                </div>
+                                <div class="value-progress-track">
+                                    <div class="value-progress-fill" style="width: {{ $progressPercent }}%;"></div>
+                                </div>
+                            </div>
+                        </td>
                         <td class="text-center">
                             <span class="status-badge {{ $batch->status === 'completed' ? 'status-completed' : 'status-active' }}">
                                 {{ $batch->status }}
@@ -549,20 +672,6 @@
                                     <div class="planner-card">
                                         <div class="planning-grid">
                                             <div class="row">
-                                                <div class="col-md-6 col-lg-2">
-                                                    <div class="planning-field">
-                                                        <div class="planning-field-head">
-                                                            <label class="form-label fw-bold mb-0">Size</label>
-                                                        </div>
-                                                        <select class="form-select" wire:model.live="size">
-                                                            <option value="S">S</option>
-                                                            <option value="M">M</option>
-                                                            <option value="L">L</option>
-                                                        </select>
-                                                        @error('size') <span class="text-danger small">{{ $message }}</span> @enderror
-                                                    </div>
-                                                </div>
-
                                                 <div class="col-md-6 col-lg-4">
                                                     <div class="planning-field">
                                                         <div class="planning-field-head">
@@ -579,29 +688,104 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="col-md-6 col-lg-3">
+                                                <div class="col-md-6 col-lg-4">
                                                     <div class="planning-field">
                                                         <div class="planning-field-head">
-                                                            <label class="form-label fw-bold mb-0">Material (Ton)</label>
+                                                            <label class="form-label fw-bold mb-0">Purchase Batch</label>
                                                         </div>
-                                                        <input
-                                                            type="number"
-                                                            step="0.001"
-                                                            min="0.001"
-                                                            max="{{ number_format($availableMaterialTon, 3, '.', '') }}"
-                                                            class="form-control"
-                                                            wire:model.live="planned_material_ton"
-                                                            placeholder="e.g. 5">
-                                                        <div>
-                                                            <span class="metric-pill {{ $availableMaterialTon <= 0 ? 'low' : '' }}">
-                                                                Available {{ $size }} stock: {{ number_format($availableMaterialTon, 3) }} ton
+                                                        <select class="form-select" wire:model.live="purchase_batch_no" @disabled($isEditMode)>
+                                                            <option value="">Select batch</option>
+                                                            @foreach(($availableMaterialBatches ?? []) as $availableBatch)
+                                                            <option value="{{ $availableBatch['purchase_batch_no'] }}">
+                                                                {{ $availableBatch['purchase_batch_no'] }} | Remaining {{ number_format($availableBatch['remaining_quantity'], 3) }} ton
+                                                            </option>
+                                                            @endforeach
+                                                        </select>
+                                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                                            @if(($availableMaterialBatches ?? collect())->isNotEmpty())
+                                                            <span class="stock-suggestion">
+                                                                Suggested: {{ $availableMaterialBatches->first()['purchase_batch_no'] }}
                                                             </span>
+                                                            @endif
+                                                            @if($isEditMode)
+                                                            <span class="field-help mb-0">Stock batch is locked in edit mode.</span>
+                                                            @endif
                                                         </div>
-                                                        @error('planned_material_ton') <span class="text-danger small">{{ $message }}</span> @enderror
+                                                        @error('purchase_batch_no') <span class="text-danger small">{{ $message }}</span> @enderror
                                                     </div>
                                                 </div>
 
-                                                <div class="col-md-6 col-lg-3">
+                                                <div class="col-md-6 col-lg-4">
+                                                    <div class="planning-field">
+                                                        <div class="planning-field-head">
+                                                            <label class="form-label fw-bold mb-0">Selected Batch Stock (Ton)</label>
+                                                        </div>
+                                                        <input type="number" class="form-control" value="{{ number_format($availableMaterialTon, 3, '.', '') }}" readonly>
+                                                        <div>
+                                                            <span class="metric-pill {{ $availableMaterialTon <= 0 ? 'low' : '' }}">
+                                                                {{ $purchase_batch_no ? 'Batch: ' . $purchase_batch_no : 'Select a purchase batch' }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <div class="batch-summary-card">
+                                                        <div class="batch-summary-title">Auto Production Target Breakdown</div>
+                                                        <div class="batch-summary-grid mb-3">
+                                                            <div class="batch-summary-item">
+                                                                <div class="batch-summary-item-label">Purchase Batch</div>
+                                                                <div class="batch-summary-item-value">{{ $purchase_batch_no ?: '-' }}</div>
+                                                            </div>
+                                                            <div class="batch-summary-item">
+                                                                <div class="batch-summary-item-label">Total Stock</div>
+                                                                <div class="batch-summary-item-value">{{ number_format($availableMaterialTon, 3) }} ton</div>
+                                                            </div>
+                                                            <div class="batch-summary-item">
+                                                                <div class="batch-summary-item-label">Estimated Total</div>
+                                                                <div class="batch-summary-item-value">{{ number_format($estimated_target_qty) }} pcs</div>
+                                                            </div>
+                                                            <div class="batch-summary-item">
+                                                                <div class="batch-summary-item-label">Estimated Days</div>
+                                                                <div class="batch-summary-item-value">{{ $estimated_days ?: 0 }}</div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="table-responsive">
+                                                            <table class="table table-bordered breakdown-table mb-0">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th>Size</th>
+                                                                        <th class="text-end">Stock (Ton)</th>
+                                                                        <th class="text-end">Estimated Target</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @forelse($estimatedTargetBreakdown as $row)
+                                                                    <tr>
+                                                                        <td class="fw-bold">{{ $row['size'] }}</td>
+                                                                        <td class="text-end">{{ number_format($row['ton'], 3) }}</td>
+                                                                        <td class="text-end fw-bold">{{ number_format($row['estimated']) }}</td>
+                                                                    </tr>
+                                                                    @empty
+                                                                    <tr>
+                                                                        <td colspan="3" class="text-center text-muted">Select a purchase batch to see the breakdown.</td>
+                                                                    </tr>
+                                                                    @endforelse
+                                                                </tbody>
+                                                                <tfoot>
+                                                                    <tr>
+                                                                        <th>Total</th>
+                                                                        <th class="text-end">{{ number_format($availableMaterialTon, 3) }}</th>
+                                                                        <th class="text-end">{{ number_format($estimated_target_qty) }}</th>
+                                                                    </tr>
+                                                                </tfoot>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-6 col-lg-4">
                                                     <div class="planning-field">
                                                         <div class="planning-field-head">
                                                             <label class="form-label fw-bold mb-0">Estimated Target</label>
@@ -639,25 +823,17 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="col-md-12 col-lg-4">
-                                                    <div class="planning-field">
-                                                        <div class="planning-field-head">
-                                                            <label class="form-label fw-bold mb-0">Supervisor</label>
-                                                        </div>
-                                                        <select class="form-select" wire:model="supervisor_id">
-                                                            <option value="">Select Supervisor</option>
-                                                            @foreach($supervisors as $staff)
-                                                            <option value="{{ $staff->id }}">{{ $staff->name }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                        @error('supervisor_id') <span class="text-danger small">{{ $message }}</span> @enderror
-                                                    </div>
-                                                </div>
-
                                                 <div class="col-12">
                                                     <div class="helper-box">
                                                         Estimation rule: Target = (Material Ton x 1000) / Size Setting.
                                                         Current settings: S {{ $sizeFactors['S'] ?? 0.3 }}, M {{ $sizeFactors['M'] ?? 0.5 }}, L {{ $sizeFactors['L'] ?? 0.75 }}.
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <div class="batch-step-actions">
+                                                        <div></div>
+                                                        <label for="batch-tab-workers" class="btn btn-custom">Next: Workers & Notes</label>
                                                     </div>
                                                 </div>
                                             </div>
@@ -673,6 +849,22 @@
                                     $selectedWorkers = $eligibleStaff->whereIn('id', array_map('intval', $staff_ids));
                                     @endphp
                                     <div class="workers-panel mb-3">
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold">Supervisor</label>
+                                                <select class="form-select" wire:model="supervisor_id">
+                                                    <option value="">Select Supervisor</option>
+                                                    @foreach($supervisors as $staff)
+                                                    <option value="{{ $staff->id }}">{{ $staff->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('supervisor_id') <span class="text-danger small">{{ $message }}</span> @enderror
+                                            </div>
+                                            <div class="col-md-6 d-flex align-items-end justify-content-md-end">
+                                                <label for="batch-tab-planning" class="btn btn-light border w-100 w-md-auto">Back: Batch Planning</label>
+                                            </div>
+                                        </div>
+
                                         <label class="form-label fw-bold">{{ $isEditMode ? 'Manage Workers (Add/Remove)' : 'Select Workers (1 or more)' }}</label>
                                         <div class="mb-2">
                                             <input
@@ -737,46 +929,86 @@
                 </div>
                 <div class="modal-footer batch-modal-footer">
                     @php
-                    $canSubmitBatch = !blank($size)
-                    && !blank($production_material_id)
-                    && ((float) $planned_material_ton > 0)
-                    && ((int) $estimated_days > 0)
-                    && !blank($start_date)
-                    && ((int) $target_qty > 0)
-                    && !blank($supervisor_id)
-                    && (count($staff_ids) > 0);
-                    @endphp
-                    <button class="btn btn-light" wire:click="closeCreateModal">Cancel</button>
-                    @if($isEditMode)
-                    <button class="btn-custom" wire:click="updateBatch" @disabled(!$canSubmitBatch)>Update Batch</button>
-                    @else
-                    <button class="btn-custom" wire:click="createBatch" @disabled(!$canSubmitBatch)>Create Batch</button>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
+                    $missingItems = [];
 
-    @if($showDeleteModal)
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 14px;">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold text-danger">Delete Production Batch</h5>
-                    <button type="button" class="btn-close" wire:click="cancelDeleteBatch"></button>
+                    if (blank($production_material_id)) {
+                    $missingItems[] = 'Material';
+                    }
+
+                    if (blank($purchase_batch_no)) {
+                    $missingItems[] = 'Purchase Batch';
+                    }
+
+                    if ((float) $availableMaterialTon <= 0) {
+                        $missingItems[]='Available Stock' ;
+                        }
+
+                        if ((int) $estimated_days <=0) {
+                        $missingItems[]='Estimated Days' ;
+                        }
+
+                        if (blank($start_date)) {
+                        $missingItems[]='Start Date' ;
+                        }
+
+                        if ((int) $target_qty <=0) {
+                        $missingItems[]='Estimated Target' ;
+                        }
+
+                        if (blank($supervisor_id)) {
+                        $missingItems[]='Supervisor' ;
+                        }
+
+                        if (count($staff_ids) <=0) {
+                        $missingItems[]='Workers' ;
+                        }
+
+                        $canSubmitBatch=count($missingItems)===0;
+                        @endphp
+                        <div class="w-100 mb-2">
+                        @if(count($missingItems) > 0)
+                        <div class="small text-danger fw-semibold">
+                            Complete these fields before submit: {{ implode(', ', $missingItems) }}
+                        </div>
+                        @endif
+
+                        @if($errors->any())
+                        <div class="small text-danger mt-1">
+                            {{ $errors->first() }}
+                        </div>
+                        @endif
                 </div>
-                <div class="modal-body">
-                    <p class="mb-1">Are you sure you want to delete this batch?</p>
-                    <p class="mb-0"><strong>{{ $deletingBatchCode }}</strong></p>
-                    <small class="text-muted">This will permanently remove the batch and related day logs.</small>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-light" wire:click="cancelDeleteBatch">Cancel</button>
-                    <button class="btn btn-danger" wire:click="performDeleteBatch">Yes, Delete</button>
-                </div>
+                <button class="btn btn-light" wire:click="closeCreateModal">Cancel</button>
+                @if($isEditMode)
+                <button class="btn-custom" wire:click="updateBatch" wire:loading.attr="disabled">Update Batch</button>
+                @else
+                <button class="btn-custom" wire:click="createBatch" wire:loading.attr="disabled">Create Batch</button>
+                @endif
             </div>
         </div>
     </div>
-    @endif
+</div>
+@endif
+
+@if($showDeleteModal)
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 14px;">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold text-danger">Delete Production Batch</h5>
+                <button type="button" class="btn-close" wire:click="cancelDeleteBatch"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-1">Are you sure you want to delete this batch?</p>
+                <p class="mb-0"><strong>{{ $deletingBatchCode }}</strong></p>
+                <small class="text-muted">This will permanently remove the batch and related day logs.</small>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" wire:click="cancelDeleteBatch">Cancel</button>
+                <button class="btn btn-danger" wire:click="performDeleteBatch">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 </div>
