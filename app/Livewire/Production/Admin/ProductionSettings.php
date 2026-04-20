@@ -14,12 +14,12 @@ class ProductionSettings extends Component
     public float $size_s_ton_per_1000 = 0.3;
     public float $size_m_ton_per_1000 = 0.5;
     public float $size_l_ton_per_1000 = 0.75;
-    public bool $showSizeSettingsSection = true;
+    public bool $showSizeSettingsSection = false;
 
     public int $commission_threshold_items = 10000;
     public float $commission_rate_upto_threshold = 10;
     public float $commission_rate_after_threshold = 15;
-    public bool $showCommissionSettingsSection = true;
+    public bool $showCommissionSettingsSection = false;
 
     public function mount(): void
     {

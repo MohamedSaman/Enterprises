@@ -22,6 +22,8 @@ class ProductDetail extends Model
         'brand_id',
         'category_id',
         'supplier_id',
+        'source_production_batch_id',
+        'production_size',
     ];
 
     public function price(): HasOne

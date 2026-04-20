@@ -30,18 +30,18 @@ class UserSeeder extends Seeder
             'password' => Hash::make('admin@1213'),
             'role' => 'admin',
             'contact' => '0717894272',
-            'module' => 'invontery',
+            'module' => 'both',
         ]);
 
         // Create Admin User
-        User::create([
-            'name' => 'Production Admin',
-            'email' => 'admin@production.com',
-            'password' => Hash::make('admin@1213'),
-            'role' => 'admin',
-            'contact' => '0717894272',
-            'module' => 'production',
-        ]);
+        // User::create([
+        //     'name' => 'Production Admin',
+        //     'email' => 'admin@production.com',
+        //     'password' => Hash::make('admin@1213'),
+        //     'role' => 'admin',
+        //     'contact' => '0717894272',
+        //     'module' => 'production',
+        // ]);
 
 
     }

@@ -326,11 +326,12 @@
 					<a href="{{ route('production.admin.grn') }}">GRN</a>
 				</div>
 			</div>
-			<div class="nav-dropdown {{ request()->routeIs(['production.admin.material-list', 'production.admin.batches', 'production.admin.batch-details', 'production.admin.expenses']) ? 'active-parent' : '' }}">
+			<div class="nav-dropdown {{ request()->routeIs(['production.admin.material-list', 'production.admin.batches', 'production.admin.batch-details', 'production.admin.audit', 'production.admin.expenses']) ? 'active-parent' : '' }}">
 				<a href="#" class="nav-item">Production <i class="bi bi-chevron-down ms-1" style="font-size: 0.7rem"></i></a>
 				<div class="dropdown-content">
 					<a href="{{ route('production.admin.material-list') }}">Material List</a>
 					<a href="{{ route('production.admin.batches') }}">Production Batch</a>
+					<a href="{{ route('production.admin.audit') }}">Audit Transfer</a>
 					<a href="{{ route('production.admin.expenses') }}">Expenses</a>
 				</div>
 			</div>
@@ -370,7 +371,7 @@
 						</a>
 					</li>
 					<li>
-						<a class="dropdown-item py-2 px-3 rounded-2 fw-semibold" href="{{ route('admin.settings') }}">
+						<a class="dropdown-item py-2 px-3 rounded-2 fw-semibold" href="{{ route('production.admin.settings') }}">
 							<i class="bi bi-gear me-2 text-secondary"></i>Settings
 						</a>
 					</li>

@@ -323,6 +323,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/grn', \App\Livewire\Production\Admin\GRN::class)->name('grn');
         Route::get('/batches', \App\Livewire\Production\Admin\ProductionBatches::class)->name('batches');
         Route::get('/batches/{batchId}', \App\Livewire\Production\Admin\ProductionBatchDetails::class)->name('batch-details');
+        Route::get('/audit', \App\Livewire\Production\Admin\ProductionAudit::class)->name('audit');
     });
 
     // !! Production Module Routes - Staff

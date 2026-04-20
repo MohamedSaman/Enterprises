@@ -21,9 +21,14 @@ class ProductionBatch extends Model
         'target_qty',
         'planned_material_ton',
         'completed_qty',
+        'transferred_s_qty',
+        'transferred_m_qty',
+        'transferred_l_qty',
         'supervisor_id',
         'created_by',
         'status',
+        'transferred_to_inventory_at',
+        'transferred_to_inventory_by',
         'notes',
     ];
 
@@ -32,6 +37,10 @@ class ProductionBatch extends Model
         'end_date' => 'date',
         'estimated_days' => 'integer',
         'planned_material_ton' => 'float',
+        'transferred_s_qty' => 'integer',
+        'transferred_m_qty' => 'integer',
+        'transferred_l_qty' => 'integer',
+        'transferred_to_inventory_at' => 'datetime',
     ];
 
     public function material()
