@@ -315,6 +315,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         })->name('profile');
         Route::get('/expenses', \App\Livewire\Production\Admin\ProductionExpenses::class)->name('expenses');
         Route::get('/salary', \App\Livewire\Production\Admin\ProductionSalaryReport::class)->name('salary');
+        Route::get('/monthly-salary', \App\Livewire\Production\Admin\MonthlySalaryReport::class)->name('monthly-salary');
         Route::get('/staff', \App\Livewire\Production\Admin\StaffManagement::class)->name('staff');
         Route::get('/material-list', \App\Livewire\Production\Admin\MaterialList::class)->name('material-list');
         Route::get('/settings', \App\Livewire\Production\Admin\ProductionSettings::class)->name('settings');

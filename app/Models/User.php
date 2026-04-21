@@ -82,6 +82,12 @@ class User extends Authenticatable
         return $this->hasOne(UserDetail::class, 'user_id', 'id');
     }
 
+    // Relationship: User has many monthly salaries
+    public function monthlySalaries()
+    {
+        return $this->hasMany(MonthlySalary::class, 'user_id', 'id');
+    }
+
     /**
      * Check if user has a specific permission
      * If staff has no permissions assigned, grant full access by default

@@ -4,7 +4,7 @@
         .dashboard-wrapper {
             background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%);
             min-height: 100vh;
-            padding: 2rem 0;
+            padding: 2rem 0.5rem;
         }
 
         /* Stat Cards Row */

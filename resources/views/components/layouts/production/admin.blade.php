@@ -292,7 +292,6 @@
 		}
 
 		.main-content {
-			padding: 2.5rem;
 			max-width: 1600px;
 			margin: 0 auto;
 		}
@@ -335,10 +334,11 @@
 					<a href="{{ route('production.admin.expenses') }}">Expenses</a>
 				</div>
 			</div>
-			<div class="nav-dropdown {{ request()->routeIs(['production.admin.salary', 'production.admin.staff']) ? 'active-parent' : '' }}">
+			<div class="nav-dropdown {{ request()->routeIs(['production.admin.salary', 'production.admin.monthly-salary', 'production.admin.staff']) ? 'active-parent' : '' }}">
 				<a href="#" class="nav-item">Salary <i class="bi bi-chevron-down ms-1" style="font-size: 0.7rem"></i></a>
 				<div class="dropdown-content">
-					<a href="{{ route('production.admin.salary') }}">Salary Report</a>
+					<a href="{{ route('production.admin.salary') }}">Batch Salary Report</a>
+					<a href="{{ route('production.admin.monthly-salary') }}">Monthly Salary</a>
 					<a href="{{ route('production.admin.staff') }}">Staff List</a>
 				</div>
 			</div>
