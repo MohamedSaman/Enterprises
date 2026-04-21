@@ -23,6 +23,7 @@ class MonthlySalaryReport extends Component
     public $includeEpfEtf = false;
     public $salaryData = [];
     public $editingEmployees = [];
+    public bool $salaryAlreadyExists = false;
 
     // Settings cache (public so Livewire keeps it between requests)
     public array $settings = [];
@@ -30,8 +31,9 @@ class MonthlySalaryReport extends Component
     public function mount(): void
     {
         $now = now();
-        $this->selectedYear = (int) $now->format('Y');
-        $this->selectedMonth = (int) $now->subMonth()->format('m');
+        $previousMonth = $now->copy()->subMonth();
+        $this->selectedYear = (int) $previousMonth->format('Y');
+        $this->selectedMonth = (int) $previousMonth->format('m');
         $this->loadSettings();
     }
 
@@ -46,6 +48,15 @@ class MonthlySalaryReport extends Component
     {
         $this->selectedEmployee = null;
         $this->salaryData = [];
+        $this->salaryAlreadyExists = false;
+    }
+
+    public function updatedSelectedYear(): void
+    {
+        $this->selectedMonth = $this->getAvailableMonthsProperty()[0]['value'] ?? null;
+        $this->selectedEmployee = null;
+        $this->salaryData = [];
+        $this->salaryAlreadyExists = false;
     }
 
     public function updatedSelectedEmployee(): void
@@ -54,6 +65,7 @@ class MonthlySalaryReport extends Component
             $this->calculateSalary();
         } else {
             $this->salaryData = [];
+            $this->salaryAlreadyExists = false;
         }
     }
 
@@ -109,6 +121,11 @@ class MonthlySalaryReport extends Component
             $this->salaryData = [];
             return;
         }
+
+        $this->salaryAlreadyExists = MonthlySalary::where('user_id', $employee->id)
+            ->where('month', $this->selectedMonth)
+            ->where('year', $this->selectedYear)
+            ->exists();
 
         $startDate = Carbon::createFromFormat('Y-m', "{$this->selectedYear}-{$this->selectedMonth}")->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
@@ -272,14 +289,15 @@ class MonthlySalaryReport extends Component
             return;
         }
 
-        // Check if salary already exists for this month/year
+        // Block duplicate salary generation for the same employee/month/year
         $existingRecord = MonthlySalary::where('user_id', $this->selectedEmployee)
             ->where('month', $this->selectedMonth)
             ->where('year', $this->selectedYear)
             ->first();
 
-        if ($existingRecord && $existingRecord->status !== 'draft') {
-            $this->dispatch('notify', type: 'error', message: 'Salary already generated for this month. Cannot regenerate.');
+        if ($existingRecord) {
+            $this->salaryAlreadyExists = true;
+            $this->dispatch('notify', type: 'error', message: 'Salary already exists for this employee in this month. Cannot generate again.');
             return;
         }
 
@@ -309,6 +327,7 @@ class MonthlySalaryReport extends Component
         );
 
         $this->dispatch('notify', type: 'success', message: 'Salary generated successfully!');
+        $this->salaryAlreadyExists = true;
     }
 
     public function editSalary($salaryId): void
@@ -347,13 +366,33 @@ class MonthlySalaryReport extends Component
         $months = [];
         $now = now();
 
-        // Show only past months (up to 12 months back)
-        for ($i = 1; $i <= 12; $i++) {
+        // Show only the last 5 previous months, excluding the current month
+        for ($i = 1; $i <= 5; $i++) {
             $date = $now->copy()->subMonths($i);
-            $months[$date->format('m')] = $date->format('F');
+
+            if ((int) $date->format('Y') !== (int) $this->selectedYear) {
+                continue;
+            }
+
+            $months[] = [
+                'value' => (int) $date->format('m'),
+                'label' => $date->format('F'),
+            ];
         }
 
-        return array_reverse($months, true);
+        return array_reverse($months);
+    }
+
+    public function getAvailableYearsProperty()
+    {
+        $now = now();
+        $years = [];
+
+        for ($i = 1; $i <= 5; $i++) {
+            $years[] = (int) $now->copy()->subMonths($i)->format('Y');
+        }
+
+        return array_values(array_unique($years));
     }
 
     public function getGeneratedSalariesProperty()
@@ -369,6 +408,7 @@ class MonthlySalaryReport extends Component
     {
         return view('livewire.production.admin.monthly-salary-report', [
             'employees' => $this->employees,
+            'availableYears' => $this->availableYears,
             'availableMonths' => $this->availableMonths,
             'generatedSalaries' => $this->generatedSalaries,
             'settings' => $this->settings,

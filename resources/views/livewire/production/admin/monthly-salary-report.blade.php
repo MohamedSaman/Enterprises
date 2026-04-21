@@ -348,17 +348,25 @@
         <div class="card-modern p-3 mb-3">
             <div class="row g-2 align-items-end">
                 <div class="col-md-3">
-                    <label class="form-label fw-bold mb-2">Select Month</label>
-                    <select class="form-control-lg w-100" wire:model.live="selectedMonth">
-                        <option value="">-- Choose Month --</option>
-                        @foreach($availableMonths as $month => $name)
-                        <option value="{{ $month }}">{{ $name }}</option>
+                    <label class="form-label fw-bold mb-2">Year</label>
+                    <select class="form-control-lg w-100" wire:model.live="selectedYear">
+                        <option value="">-- Choose Year --</option>
+                        @foreach($availableYears as $year)
+                        <option value="{{ $year }}">{{ $year }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-bold mb-2">Year</label>
-                    <input type="number" class="form-control-lg w-100" wire:model="selectedYear" readonly>
+                    <label class="form-label fw-bold mb-2">Select Month</label>
+                    <select class="form-control-lg w-100" wire:model.live="selectedMonth" @disabled(!$selectedYear)>
+                        <option value="">-- Choose Month --</option>
+                        @forelse($availableMonths as $month)
+                        <option value="{{ $month['value'] }}">{{ $month['label'] }}</option>
+                        @empty
+                        <option value="">No months available</option>
+                        @endforelse
+                    </select>
+
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold mb-2">Select Employee</label>
@@ -477,25 +485,19 @@
                 </div>
             </div>
 
-            <!-- Commission Details Note -->
-            <div class="alert commission-note mt-3 mb-0" role="alert">
-                <strong>Commission Calculation:</strong>
-                <ul class="mb-0 mt-2">
-                    <li>First {{ number_format($settings['production_commission_threshold_items'] ?? 10000) }} items: Rs. {{ number_format($settings['production_commission_rate_upto_threshold'] ?? 10, 2) }} per item</li>
-                    <li>Items beyond threshold: Rs. {{ number_format($settings['production_commission_rate_after_threshold'] ?? 15, 2) }} per item</li>
-                    <li>Minimum {{ $settings['production_salary_min_attendance_full_commission'] ?? 20 }} days attendance for full commission, below that receives 50%</li>
-                    @if($salaryData['employee_role'] === 'Supervisor')
-                    <li><strong>Supervisor receives double commission</strong></li>
-                    @endif
-                </ul>
+
+            @if($salaryAlreadyExists)
+            <div class="alert alert-warning mt-3 mb-0 py-2" role="alert">
+                Salary already exists for this employee in this year and month. Generation is disabled.
             </div>
+            @endif
         </div>
 
         <!-- Action Buttons -->
         <div class="card-modern p-3 mb-3">
             <div class="row g-2">
                 <div class="col-auto">
-                    <button class="btn btn-gradient" wire:click="generateSalary">
+                    <button class="btn btn-gradient" wire:click="generateSalary" @disabled($salaryAlreadyExists || !$selectedEmployee || !$selectedMonth || !$selectedYear)>
                         <i class="bi bi-check-circle me-2"></i>Generate Salary
                     </button>
                 </div>
