@@ -1,4 +1,4 @@
-<div class="container-fluid py-3" style="background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%); min-height: 100vh; margin: -1rem; padding: 2rem !important;">
+<div class="container-fluid py-3" style="background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%); min-height: 100vh; padding: 1rem !important;">
     @push('styles')
     <style>
         .collapse-card {
@@ -29,7 +29,7 @@
 
         .collapse-content {
             border-top: 1px solid #e2e8f0;
-            padding: 2rem;
+            padding: 1.25rem;
             background: #ffffff;
         }
 
@@ -126,7 +126,7 @@
         @if($showSizeSettingsSection)
         <div class="collapse-content">
             <div class="section-card">
-                <p class="text-muted mb-4">Define ton usage needed for 1000 cages by size. Batch target estimation uses these values.</p>
+                <p class="text-muted mb-3">Define ton usage needed for 1000 cages by size. Batch target estimation uses these values.</p>
 
                 <div class="row g-3">
                     <div class="col-md-4">
@@ -146,13 +146,13 @@
                     </div>
                 </div>
 
-                <div class="hint-box mt-4">
+                <div class="hint-box mt-3">
                     <div class="fw-bold mb-2">How estimation works</div>
                     <div class="small text-muted">Estimated target = (Material ton × 1000) / Selected size setting</div>
                     <div class="small text-muted">Example: 5 ton with Size M setting 0.5 => (5 × 1000) / 0.5 = 10,000</div>
                 </div>
 
-                <div class="mt-4">
+                <div class="mt-3">
                     <button class="btn-custom" wire:click="saveSettings">Save Settings</button>
                 </div>
             </div>
@@ -172,7 +172,7 @@
         @if($showCommissionSettingsSection)
         <div class="collapse-content">
             <div class="section-card">
-                <p class="text-muted mb-4">Set the commission rules used by production daily logs. The first threshold uses one rate, and items after the threshold use a higher rate.</p>
+                <p class="text-muted mb-3">Set the commission rules used by production daily logs. The first threshold uses one rate, and items after the threshold use a higher rate.</p>
 
                 <div class="row g-3">
                     <div class="col-md-4">
@@ -192,13 +192,47 @@
                     </div>
                 </div>
 
-                <div class="hint-box mt-4">
+                <div class="hint-box mt-3">
                     <div class="fw-bold mb-2">Commission Example</div>
                     <div class="small text-muted">If production is 12,000 items:</div>
                     <div class="small text-muted">First 10,000 items = 10 each, remaining 2,000 items = 15 each</div>
                 </div>
 
-                <div class="mt-4">
+                <div class="mt-3">
+                    <button class="btn-custom" wire:click="saveSettings">Save Settings</button>
+                </div>
+            </div>
+        </div>
+        @endif
+    </div>
+
+    <div class="collapse-card mt-3 section-spacer">
+        <button type="button" class="collapse-header" wire:click="$toggle('showCurrencySettingsSection')">
+            <span>
+                <i class="bi bi-currency-exchange fs-5 me-3 text-warning"></i>
+                Currency & Exchange Settings
+            </span>
+            <i class="bi {{ $showCurrencySettingsSection ? 'bi-chevron-up' : 'bi-chevron-down' }} fs-4 text-secondary"></i>
+        </button>
+
+        @if($showCurrencySettingsSection)
+        <div class="collapse-content">
+            <div class="section-card">
+                <p class="text-muted mb-3">Set the default exchange rate used in the system for calculating conversions, such as raw material purchases.</p>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">1 Chinese Yuan (RMB) equals to Sri Lankan Rupee (LKR)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white" style="font-weight: 700; color: #e11d48;">¥1 =</span>
+                            <input type="number" step="0.01" min="0.01" class="form-control" wire:model="rmb_to_lkr_rate" style="color: #0284c7; font-weight: bold;">
+                            <span class="input-group-text bg-white fw-bold" style="color: #0284c7;">LKR</span>
+                        </div>
+                        @error('rmb_to_lkr_rate') <span class="text-danger small">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
+                <div class="mt-3">
                     <button class="btn-custom" wire:click="saveSettings">Save Settings</button>
                 </div>
             </div>

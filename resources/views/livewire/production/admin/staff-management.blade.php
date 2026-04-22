@@ -4,13 +4,13 @@
         .dashboard-wrapper {
             background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%);
             min-height: 100vh;
-            padding: 2rem 0;
+            padding: 1rem 0;
         }
 
         .section-card {
             background: #ffffff;
             border-radius: 14px;
-            padding: 2rem;
+            padding: 1.25rem;
             border: 1px solid rgba(30, 41, 59, 0.08);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
             transition: all 0.3s ease;
@@ -125,7 +125,7 @@
     @endpush
 
     <div class="section-card">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h2 class="section-title">Production Staff</h2>
                 <p class="section-subtitle mb-0">Create and manage production workers, supervisors, cleaners, and oditers</p>
@@ -135,7 +135,7 @@
             </button>
         </div>
 
-        <div class="mb-4" style="max-width: 320px;">
+        <div class="mb-3" style="max-width: 320px;">
             <input type="text" class="form-control" placeholder="Search name, NIC, phone, role" wire:model.live="search">
         </div>
 
@@ -178,7 +178,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">No production staff found.</td>
+                        <td colspan="7" class="text-center   py-3   text-muted">No production staff found.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -196,7 +196,7 @@
                     <h5 class="modal-title fw-bold">Create Production Staff</h5>
                     <button type="button" class="btn-close" wire:click="closeCreateModal"></button>
                 </div>
-                <div class="modal-body p-4">
+                <div class="modal-body  p-3">
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Name</label>
@@ -270,7 +270,7 @@
                     <h5 class="modal-title fw-bold">Staff Details</h5>
                     <button type="button" class="btn-close" wire:click="closeViewModal"></button>
                 </div>
-                <div class="modal-body p-4">
+                <div class="modal-body  p-3">
                     <div class="detail-grid">
                         <div class="detail-box">
                             <div class="detail-label">Name</div>
@@ -326,7 +326,7 @@
                     <h5 class="modal-title fw-bold text-danger">Delete Staff</h5>
                     <button type="button" class="btn-close" wire:click="closeDeleteModal"></button>
                 </div>
-                <div class="modal-body p-4">
+                <div class="modal-body  p-3">
                     <p class="mb-2">Are you sure you want to delete this staff member?</p>
                     @if($deleteBlocked)
                     <div class="alert alert-danger mb-0">{{ $deleteBlockMessage }}</div>

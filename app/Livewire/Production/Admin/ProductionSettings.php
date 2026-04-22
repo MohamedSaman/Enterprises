@@ -21,6 +21,9 @@ class ProductionSettings extends Component
     public float $commission_rate_after_threshold = 15;
     public bool $showCommissionSettingsSection = false;
 
+    public float $rmb_to_lkr_rate = 92;
+    public bool $showCurrencySettingsSection = false;
+
     public function mount(): void
     {
         $this->loadSettings();
@@ -36,6 +39,7 @@ class ProductionSettings extends Component
                 'production_commission_threshold_items',
                 'production_commission_rate_upto_threshold',
                 'production_commission_rate_after_threshold',
+                'production_rmb_to_lkr_rate',
             ])
             ->pluck('value', 'key');
 
@@ -46,6 +50,8 @@ class ProductionSettings extends Component
         $this->commission_threshold_items = (int) ($settings['production_commission_threshold_items'] ?? 10000);
         $this->commission_rate_upto_threshold = (float) ($settings['production_commission_rate_upto_threshold'] ?? 10);
         $this->commission_rate_after_threshold = (float) ($settings['production_commission_rate_after_threshold'] ?? 15);
+
+        $this->rmb_to_lkr_rate = (float) ($settings['production_rmb_to_lkr_rate'] ?? 92);
     }
 
     public function saveSettings(): void
@@ -57,6 +63,7 @@ class ProductionSettings extends Component
             'commission_threshold_items' => 'required|integer|min:1',
             'commission_rate_upto_threshold' => 'required|numeric|min:0',
             'commission_rate_after_threshold' => 'required|numeric|min:0',
+            'rmb_to_lkr_rate' => 'required|numeric|min:0.01',
         ]);
 
         $this->saveSettingKey('production_size_factor_s', $this->size_s_ton_per_1000, 'Ton consumed for 1000 cages (Size S)');
@@ -65,8 +72,9 @@ class ProductionSettings extends Component
         $this->saveSettingKey('production_commission_threshold_items', (float) $this->commission_threshold_items, 'Commission threshold items');
         $this->saveSettingKey('production_commission_rate_upto_threshold', $this->commission_rate_upto_threshold, 'Commission rate per item up to threshold');
         $this->saveSettingKey('production_commission_rate_after_threshold', $this->commission_rate_after_threshold, 'Commission rate per item after threshold');
+        $this->saveSettingKey('production_rmb_to_lkr_rate', $this->rmb_to_lkr_rate, 'Exchange rate for 1 RMB to LKR');
 
-        $this->dispatch('alert', ['message' => 'Production size settings saved successfully.', 'type' => 'success']);
+        $this->dispatch('alert', ['message' => 'Production settings saved successfully.', 'type' => 'success']);
     }
 
     private function saveSettingKey(string $key, float $value, string $description): void

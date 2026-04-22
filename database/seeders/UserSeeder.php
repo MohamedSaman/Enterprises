@@ -55,7 +55,7 @@ class UserSeeder extends Seeder
             'nic_num' => 'NIC123456789',
             'address' => '123 Main Street, Colombo',
             'work_role' => 'Supervisor',
-            'work_type' => 'Full-time',
+            'work_type' => 'monthly',
             'department' => 'Production',
             'gender' => 'Male',
             'join_date' => now()->subYears(5)->toDateString(),
@@ -78,7 +78,7 @@ class UserSeeder extends Seeder
                 'module' => 'production',
             ]);
 
-            $baseSalary = 25000 + ($index * 1000);
+            $baseSalary = 30000 + ($index * 1000);
             UserDetail::create([
                 'user_id' => $staffWorker->id,
                 'dob' => now()->subYears(30 + $index)->toDateString(),
@@ -86,7 +86,7 @@ class UserSeeder extends Seeder
                 'nic_num' => 'NIC' . str_pad($index + 1, 8, '0', STR_PAD_LEFT),
                 'address' => ($index + 100) . ' Worker Street, Colombo',
                 'work_role' => 'Worker',
-                'work_type' => 'Full-time',
+                'work_type' => 'monthly',
                 'department' => 'Production',
                 'gender' => $index % 2 == 0 ? 'Male' : 'Female',
                 'join_date' => now()->subYears(2 + $index)->toDateString(),

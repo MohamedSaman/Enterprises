@@ -4,7 +4,7 @@
         .dashboard-wrapper {
             background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%);
             min-height: 100vh;
-            padding: 2rem 0;
+            padding: 1rem 0;
         }
 
         .section-card {
@@ -227,7 +227,7 @@
     </style>
     @endpush
 
-    <div class="section-card p-4 mb-3">
+    <div class="section-card  p-3  mb-3">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
                 <h4 class="fw-bold mb-1">{{ $batch->batch_code }}</h4>
@@ -244,7 +244,7 @@
         </div>
     </div>
 
-    <div class="section-card p-4 mb-3">
+    <div class="section-card  p-3  mb-3">
         @php
         $materialAvailableTon = max((float) collect($estimatedTargetSizeBreakdown)->sum('ton'), (float) ($batch->planned_material_ton ?? 0));
         $materialUsedTon = (float) ($totals['approx_used_ton'] ?? 0);
@@ -394,7 +394,7 @@
                 @endforeach
             </div>
 
-            <div class="col-lg-9 p-4">
+            <div class="col-lg-9  p-3">
                 @if($activeTab === 'all')
                 <h5 class="fw-bold mb-3">All Days Summary</h5>
                 <div class="table-responsive">
@@ -422,7 +422,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">No day logs yet.</td>
+                                <td colspan="5" class="text-center  py-3  text-muted">No day logs yet.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -430,7 +430,7 @@
                 </div>
                 @elseif($selectedDay)
                 <h5 class="fw-bold mb-3">Day {{ $selectedDay->day_no }} Details</h5>
-                <div class="row g-3 mb-4">
+                <div class="row g-3 mb-3">
                     <div class="col-md-4">
                         <div class="p-3 border rounded">Date<br><b>{{ $selectedDay->work_date?->format('M d, Y') }}</b></div>
                     </div>
@@ -442,7 +442,7 @@
                     </div>
                 </div>
 
-                <div class="mb-4">
+                <div class="mb-3">
                     <h6 class="fw-bold">Materials Used</h6>
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered align-middle mb-0">
@@ -472,7 +472,7 @@
                     </div>
                 </div>
 
-                <div class="mb-4">
+                <div class="mb-3">
                     <h6 class="fw-bold">Staff Commissions</h6>
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered align-middle mb-0">
@@ -515,7 +515,7 @@
                     <h5 class="modal-title fw-bold">Add Day {{ $day_no }} Log</h5>
                     <button type="button" class="btn-close" wire:click="closeDayModal"></button>
                 </div>
-                <div class="modal-body p-4">
+                <div class="modal-body  p-3">
                     <div class="row g-3 mb-3">
                         <div class="col-md-3">
                             <label class="form-label fw-bold">Work Date</label>
@@ -538,7 +538,7 @@
                         </div>
                     </div>
 
-                    <div class="mt-4">
+                    <div class="mt-3">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <label class="form-label fw-bold mb-0">Expense Lines</label>
                             <button type="button" class="btn btn-sm btn-outline-primary" wire:click="addExpenseRow">+ Add Expense</button>
@@ -562,14 +562,14 @@
                         @error('expense_rows') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                     </div>
 
-                    <div class="p-3 border rounded bg-light mt-3 mb-4">
+                    <div class="p-3 border rounded bg-light mt-3 mb-3">
                         <div class="d-flex justify-content-between">
                             <span class="fw-bold">Expense Total</span>
                             <span class="fw-bold">Rs. {{ number_format($expenseRowsTotal, 2) }}</span>
                         </div>
                     </div>
 
-                    <div class="alert alert-info border-0 mb-4">
+                    <div class="alert alert-info border-0 mb-3">
                         <div class="fw-bold mb-1">Commission Calculation</div>
                         <div class="small mb-1">
                             Threshold: {{ number_format($commissionSettings['threshold_items'] ?? 10000) }} items |
@@ -581,7 +581,7 @@
                         </div>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label class="form-label fw-bold">Expense Note</label>
                         <textarea class="form-control" rows="2" wire:model="expense_note"></textarea>
                         @error('expense_note') <span class="text-danger small">{{ $message }}</span> @enderror
@@ -611,7 +611,7 @@
                     @endforeach
                     <button type="button" class="btn btn-sm btn-outline-primary" wire:click="addMaterialRow">+ Add Material Row</button>
 
-                    <h6 class="fw-bold mt-4 mb-2">Staff Commissions</h6>
+                    <h6 class="fw-bold mt-3 mb-2">Staff Commissions</h6>
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered align-middle mb-0">
                             <thead class="table-light">

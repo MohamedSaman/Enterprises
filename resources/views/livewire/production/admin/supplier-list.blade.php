@@ -4,13 +4,13 @@
         .dashboard-wrapper {
             background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%);
             min-height: 100vh;
-            padding: 2rem 0;
+            padding: 1rem 0;
         }
 
         .section-card {
             background: #ffffff;
             border-radius: 14px;
-            padding: 2rem;
+            padding: 1.25rem;
             border: 1px solid rgba(30, 41, 59, 0.08);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
             position: relative;
@@ -164,7 +164,7 @@
         }
 
         .modal-body {
-            padding: 2rem;
+            padding: 1.25rem;
         }
 
         .btn-close {
@@ -207,7 +207,7 @@
     @endpush
 
     <div class="section-card">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h2 class="section-title">Production Suppliers</h2>
                 <p class="section-subtitle mb-0">Manage suppliers used in production purchase orders</p>
@@ -217,7 +217,7 @@
             </button>
         </div>
 
-        <div class="mb-4" style="max-width: 340px;">
+        <div class="mb-3" style="max-width: 340px;">
             <input type="text" class="form-control" placeholder="🔍 Search suppliers..." wire:model.debounce-300ms="search">
         </div>
 
@@ -260,7 +260,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-5">
+                        <td colspan="7" class="text-center   py-3">
                             <div style="color: #64748b; font-weight: 600;">No suppliers found</div>
                         </td>
                     </tr>
@@ -269,7 +269,7 @@
             </table>
         </div>
 
-        <div class="mt-4">{{ $suppliers->links() }}</div>
+        <div class="mt-3">{{ $suppliers->links() }}</div>
     </div>
 
     @if($showModal)

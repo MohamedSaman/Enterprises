@@ -21,12 +21,12 @@ class AttendanceSeeder extends Seeder
             return;
         }
 
-        $currentMonth = now()->startOfMonth();
-        $endOfMonth = $currentMonth->copy()->endOfMonth();
+        $previousMonth = now()->subMonths(2)->startOfMonth();
+        $endOfMonth = $previousMonth->copy()->endOfMonth();
 
-        // Generate attendance records for the current month
+        // Generate attendance records for the previous month
         foreach ($staffUsers as $user) {
-            for ($date = $currentMonth->copy(); $date->lte($endOfMonth); $date->addDay()) {
+            for ($date = $previousMonth->copy(); $date->lte($endOfMonth); $date->addDay()) {
                 // Skip weekends (Saturday and Sunday)
                 if ($date->isWeekend()) {
                     continue;

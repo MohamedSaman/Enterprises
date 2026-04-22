@@ -42,7 +42,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 2rem;
+            padding: 0 1.25rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             position: sticky;
             top: 0;
@@ -193,7 +193,7 @@
         }
 
         .main-content {
-            padding: 2.5rem;
+            padding: 1.25rem;
             max-width: 1600px;
             margin: 0 auto;
         }
@@ -204,7 +204,7 @@
             }
 
             .main-content {
-                padding: 1.5rem;
+                padding: 1rem;
             }
         }
     </style>

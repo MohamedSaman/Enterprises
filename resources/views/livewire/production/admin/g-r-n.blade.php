@@ -4,13 +4,13 @@
         .dashboard-wrapper {
             background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%);
             min-height: 100vh;
-            padding: 2rem 0;
+            padding: 1rem 0;
         }
 
         .section-card {
             background: #ffffff;
             border-radius: 14px;
-            padding: 2rem;
+            padding: 1.25rem;
             border: 1px solid rgba(30, 41, 59, 0.08);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
             margin-bottom: 2rem;
@@ -122,7 +122,7 @@
                 <p class="section-subtitle">Confirm receipt of production materials</p>
 
                 @if($selectedPO)
-                <div class="mb-4 d-flex justify-content-between align-items-end border-bottom pb-4 mb-4">
+                <div class="mb-3 d-flex justify-content-between align-items-end border-bottom pb-3 mb-3">
                     <div>
                         <span class="text-uppercase fw-bold text-muted small d-block">Order Code</span>
                         <h4 class="fw-bold mb-0">{{ $selectedPO->order_code }}</h4>
@@ -145,12 +145,13 @@
                                 <th style="width: 15%">Ordered</th>
                                 <th style="width: 15%">Received</th>
                                 <th style="width: 20%">Unit Cost Price</th>
+                                <th style="width: 15%" class="text-end">Total</th>
                                 <th style="width: 10%"></th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($grnItems as $index => $item)
-                            <tr>
+                            <tr wire:key="grn-item-{{ $index }}">
                                 <td>
                                     <div class="fw-bold">{{ $item['name'] }}</div>
                                     <small class="text-muted fw-bold">ID: #{{ $item['material_id'] }}</small>
@@ -162,6 +163,9 @@
                                 </td>
                                 <td>
                                     <input type="number" class="form-control" wire:model.live="grnItems.{{ $index }}.cost_price" step="0.01" placeholder="0.00">
+                                </td>
+                                <td class="text-end fw-bold">
+                                    {{ number_format((float)($item['received_qty'] ?? 0) * (float)($item['cost_price'] ?? 0), 2) }}
                                 </td>
                                 <td>
                                     <div class="form-check mt-2">
@@ -175,16 +179,16 @@
                     </table>
                 </div>
 
-                <div class="text-end mt-4 pt-4 border-top">
+                <div class="text-end mt-3 pt-3 border-top">
                     <button class="btn btn-light me-2 fw-bold" wire:click="$set('selectedPO', null)">Cancel</button>
                     <button class="btn-custom-primary" wire:click="processGRN">
                         Receive & Create Stock Batches
                     </button>
                 </div>
                 @else
-                <div class="text-center py-5">
+                <div class="text-center   py-3">
                     <img src="" alt="" style="width: 120px; opacity: 0.1">
-                    <h5 class="mt-4 text-muted fw-bold">Select a Purchase Order from the right to start receiving goods.</h5>
+                    <h5 class="mt-3 text-muted fw-bold">Select a Purchase Order from the right to start receiving goods.</h5>
                 </div>
                 @endif
             </div>
@@ -196,7 +200,7 @@
                 <h2 class="section-title">Pending Orders</h2>
                 <p class="section-subtitle">Awaiting material receipt</p>
 
-                <div class="mb-4">
+                <div class="mb-3">
                     <input type="text" class="form-control" placeholder="Search PO numbers..." wire:model.live="searchPO">
                 </div>
 
@@ -218,13 +222,13 @@
                         </div>
                     </div>
                     @empty
-                    <div class="text-center py-4">
+                    <div class="text-center  py-3">
                         <small class="text-muted fw-bold">No pending orders found.</small>
                     </div>
                     @endforelse
                 </div>
 
-                <div class="mt-4">
+                <div class="mt-3">
                     {{ $pendingPOs->links() }}
                 </div>
             </div>

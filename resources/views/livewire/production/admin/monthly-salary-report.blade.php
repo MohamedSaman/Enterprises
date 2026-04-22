@@ -281,7 +281,7 @@
 
         .no-data-message {
             text-align: center;
-            padding: 3rem 1rem;
+            padding: 1.5rem 1rem;
             color: #94a3b8;
         }
 

@@ -435,7 +435,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="11" class="text-center py-5 text-muted">No daily logs added yet.</td>
+                        <td colspan="11" class="text-center   py-3   text-muted">No daily logs added yet.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -496,12 +496,12 @@
                         <div class="small" style="color: #92400e; margin-top: 0.4rem;">Your daily goal based on {{ number_format($batch->target_qty) }} total ÷ {{ number_format($batch->estimated_days) }} days</div>
                     </div>
 
-                    <div class="mt-4">
+                    <div class="mt-3">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <label class="form-label fw-bold mb-0">Expense Lines</label>
                             <button type="button" class="btn btn-sm btn-outline-primary" wire:click="addExpenseRow">+ Add Expense</button>
                         </div>
-                        <div class="small text-muted mb-2">Expenses are optional. Click the "+ Add Expense" button to add expense lines when needed.</div>
+                        <div class="small text-muted mb-2">Expenses are optional. Click the"+ Add Expense" button to add expense lines when needed.</div>
                         @foreach($expense_rows as $index => $expenseRow)
                         <div class="expense-row">
                             <div class="row g-2 align-items-start">

@@ -4,7 +4,7 @@
         .dashboard-wrapper {
             background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%);
             min-height: 100vh;
-            padding: 2rem 0;
+            padding: 1rem 0;
         }
 
         .panel-card {
@@ -12,7 +12,7 @@
             border-radius: 14px;
             border: 1px solid rgba(30, 41, 59, 0.08);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-            padding: 2rem;
+            padding: 1.25rem;
             transition: all 0.3s ease;
         }
 
@@ -168,7 +168,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="text-center py-4 text-muted">No production fixed expenses found for this batch.</td>
+                        <td colspan="5" class="text-center  py-3  text-muted">No production fixed expenses found for this batch.</td>
                     </tr>
                     @endforelse
                 </tbody>

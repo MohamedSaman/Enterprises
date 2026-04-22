@@ -4,13 +4,13 @@
         .dashboard-wrapper {
             background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%);
             min-height: 100vh;
-            padding: 2rem 0;
+            padding: 1rem 0;
         }
 
         .section-card {
             background: #ffffff;
             border-radius: 14px;
-            padding: 2rem;
+            padding: 1.25rem;
             border: 1px solid rgba(30, 41, 59, 0.08);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
             margin-bottom: 2rem;
@@ -192,8 +192,8 @@
         }
 
         .badge-partial {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            color: #7f1d1d;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
         }
 
         .dropdown-menu {
@@ -235,7 +235,7 @@
     @endpush
 
     <div class="section-card">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h2 class="section-title">Production Material Purchases</h2>
                 <p class="section-subtitle mb-0">Track and manage all purchase orders issued to suppliers</p>
@@ -269,7 +269,7 @@
                         <td class="text-center">
                             <span class="badge rounded-pill" style="background: #eff6ff; color: #3b82f6; font-weight: 800; padding: 0.4rem 0.85rem;">{{ count($po->batches) }}</span>
                         </td>
-                        <td class="text-end fw-bold" style="color: #1e293b">${{ number_format($po->total_amount, 2) }}</td>
+                        <td class="text-end fw-bold" style="color: #e11d48">¥{{ number_format($po->total_amount, 2) }}</td>
                         <td class="text-center">
                             @php
                             $badgeClass = match($po->status) {
@@ -281,7 +281,7 @@
                             };
                             @endphp
                             <span class="badge-status {{ $badgeClass }}">
-                                {{ strtoupper($po->status) }}
+                                {{ $po->status == 'received' ? 'PARTIAL RECEIPT' : strtoupper($po->status) }}
                             </span>
                         </td>
                         <td class="text-end">
@@ -293,8 +293,7 @@
                                         openUp = (window.innerHeight - r.bottom) < 220;
                                         top = openUp ? (r.top - 6) : (r.bottom + 6);
                                         left = r.right;
-                                        open = !open;
-                                    ">
+                                        open = !open;">
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </button>
                                     <ul
@@ -353,13 +352,13 @@
                 @empty
                 <tbody>
                     <tr>
-                        <td colspan="8" class="text-center py-5">No purchase orders found.</td>
+                        <td colspan="8" class="text-center   py-3">No purchase orders found.</td>
                     </tr>
                 </tbody>
                 @endforelse
             </table>
         </div>
-        <div class="mt-4">
+        <div class="mt-3">
             {{ $purchaseOrders->links() }}
         </div>
     </div>
@@ -388,7 +387,7 @@
                                 class="dropdown-menu dropdown-menu-end show position-absolute"
                                 style="z-index: 1065; right: 0; top: 100%; margin-top: 0.5rem; min-width: 12rem;">
                                 @if($selectedViewPO->status !== 'complete')
-                                @if($selectedViewPO->status == 'pending' || $selectedViewPO->status == 'partial')
+                                @if($selectedViewPO->status == 'pending' || $selectedViewPO->status == 'received')
                                 <button type="button" class="dropdown-item" @click="open = false" wire:click="openGRNModal({{ $selectedViewPO->id }})">
                                     <i class="bi bi-box-seam text-primary"></i> Process GRN
                                 </button>
@@ -417,8 +416,8 @@
                     </div>
                 </div>
 
-                <div class="modal-body p-4 p-md-5">
-                    <div class="row g-3 mb-4">
+                <div class="modal-body  p-3   p-md-4">
+                    <div class="row g-3 mb-3">
                         <div class="col-md-3">
                             <div class="p-3 rounded-3 border bg-light h-100">
                                 <div class="text-muted small text-uppercase fw-bold mb-1">Supplier</div>
@@ -443,18 +442,18 @@
                                 default => 'badge-secondary'
                                 };
                                 @endphp
-                                <span class="badge-status {{ $viewBadgeClass }}">{{ strtoupper($selectedViewPO->status) }}</span>
+                                <span class="badge-status {{ $viewBadgeClass }}">{{ $selectedViewPO->status == 'received' ? 'PARTIAL RECEIPT' : strtoupper($selectedViewPO->status) }}</span>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="p-3 rounded-3 border bg-light h-100">
                                 <div class="text-muted small text-uppercase fw-bold mb-1">Total Amount</div>
-                                <div class="fw-bold text-dark fs-5">${{ number_format($selectedViewPO->total_amount, 2) }}</div>
+                                <div class="fw-bold text-dark fs-5">¥{{ number_format($selectedViewPO->total_amount, 2) }}</div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <h6 class="fw-bold mb-0">Ordered Items</h6>
                             <span class="text-muted small text-uppercase fw-bold">{{ count($selectedViewPO->items) }} items</span>
@@ -477,22 +476,22 @@
                                         <td class="fw-bold text-dark">{{ $item->material->name ?? '-' }}</td>
                                         <td>{{ $item->size ?? '-' }}</td>
                                         <td class="text-center fw-bold">{{ number_format($item->quantity, 2) }}</td>
-                                        <td class="text-end fw-bold">${{ number_format($item->unit_price, 2) }}</td>
+                                        <td class="text-end fw-bold">¥{{ number_format($item->unit_price, 2) }}</td>
                                         <td class="text-end fw-bold">
                                             @php
                                             $lastPrice = $this->getLastPurchasePrice($item->production_material_id);
                                             @endphp
                                             @if($lastPrice)
                                             @if($lastPrice != $item->unit_price)
-                                            <span class="text-warning">${{ number_format($lastPrice, 2) }}</span>
+                                            <span class="text-warning">¥{{ number_format($lastPrice, 2) }}</span>
                                             @else
-                                            <span>${{ number_format($lastPrice, 2) }}</span>
+                                            <span>¥{{ number_format($lastPrice, 2) }}</span>
                                             @endif
                                             @else
                                             <span class="text-muted">-</span>
                                             @endif
                                         </td>
-                                        <td class="text-end fw-bold">${{ number_format(($item->quantity * $item->unit_price), 2) }}</td>
+                                        <td class="text-end fw-bold">¥{{ number_format(($item->quantity * $item->unit_price), 2) }}</td>
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -530,7 +529,7 @@
                                                 {{ number_format($batch->remaining_quantity, 2) }}
                                             </span>
                                         </td>
-                                        <td class="text-end fw-bold">${{ number_format($batch->cost_price, 2) }}</td>
+                                        <td class="text-end fw-bold">¥{{ number_format($batch->cost_price, 2) }}</td>
                                         <td class="text-center">
                                             @if($batch->remaining_quantity >= $batch->quantity)
                                             <span class="badge rounded-pill" style="background: #ecfdf5; color: #10b981; font-weight: 800; padding: 0.35rem 0.75rem; font-size: 0.7rem;">FULL</span>
@@ -543,7 +542,7 @@
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-4 text-muted">No batch records found.</td>
+                                        <td colspan="7" class="text-center  py-3  text-muted">No batch records found.</td>
                                     </tr>
                                     @endforelse
                                 </tbody>
@@ -552,8 +551,8 @@
                     </div>
                 </div>
 
-                <div class="modal-footer p-4 border-top">
-                    <button type="button" class="btn btn-light fw-bold px-4 rounded-pill" wire:click="closeViewModal">Close</button>
+                <div class="modal-footer  p-3  border-top">
+                    <button type="button" class="btn btn-light fw-bold  px-3  rounded-pill" wire:click="closeViewModal">Close</button>
                 </div>
             </div>
         </div>
@@ -573,9 +572,9 @@
                     </h5>
                     <button type="button" class="btn-close" wire:click="$set('showModal', false)"></button>
                 </div>
-                <div class="modal-body p-5">
-                    <div class="row g-4 mb-5">
-                        <div class="col-md-6 text-start">
+                <div class="modal-body  p-3">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-5 text-start">
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <label class="form-label d-block mb-0">Select Supplier</label>
                                 <button type="button" class="btn btn-sm btn-outline-primary fw-bold" wire:click="openSupplierCreateModal">
@@ -590,10 +589,18 @@
                             </select>
                             @error('supplier_id') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
-                        <div class="col-md-6 text-start">
+                        <div class="col-md-3 text-start">
                             <label class="form-label d-block mb-2">Order Date</label>
                             <input type="date" class="form-control" wire:model="order_date">
                             @error('order_date') <span class="text-danger small">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="col-md-4 text-start">
+                            <label class="form-label d-block mb-2">Exchange Rate (1 RMB = ? LKR)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white" style="font-weight: 700; color: #e11d48;">¥1 =</span>
+                                <input type="number" class="form-control fw-bold" wire:model.live.debounce.300ms="rmb_to_lkr_rate" step="0.01" min="0" style="color: #0284c7;">
+                                <span class="input-group-text bg-white fw-bold" style="color: #0284c7;">LKR</span>
+                            </div>
                         </div>
                     </div>
 
@@ -601,23 +608,24 @@
                         <table class="table" style="overflow: visible !important;">
                             <thead class="bg-light">
                                 <tr>
-                                    <th class="border-0 px-4 py-3" style="font-size: 0.75rem; text-transform: uppercase;">Material Item</th>
-                                    <th class="border-0 px-4 py-3" style="font-size: 0.75rem; text-transform: uppercase; width: 15%">Size</th>
-                                    <th class="border-0 px-4 py-3" style="font-size: 0.75rem; text-transform: uppercase; width: 15%">Quantity (Ton)</th>
-                                    <th class="border-0 px-4 py-3" style="font-size: 0.75rem; text-transform: uppercase; width: 15%">Price/Ton ($)</th>
-                                    <th class="border-0 px-4 py-3 text-end" style="font-size: 0.75rem; text-transform: uppercase; width: 15%">Sub-Total</th>
-                                    <th class="border-0 text-center" style="width: 50px"></th>
+                                    <th class="border-0 px-2 py-3" style="font-size: 0.75rem; text-transform: uppercase;">Material</th>
+                                    <th class="border-0 px-2 py-3" style="font-size: 0.75rem; text-transform: uppercase; width: 10%">Size</th>
+                                    <th class="border-0 px-2 py-3" style="font-size: 0.75rem; text-transform: uppercase; width: 14%">Qty (Ton)</th>
+                                    <th class="border-0 px-2 py-3" style="font-size: 0.75rem; text-transform: uppercase; width: 14%">Price (RMB)</th>
+                                    <th class="border-0 px-2 py-3" style="font-size: 0.75rem; text-transform: uppercase; width: 14%">Price (LKR)</th>
+                                    <th class="border-0 px-2 py-3 text-end" style="font-size: 0.75rem; text-transform: uppercase; width: 12%">Total</th>
+                                    <th class="border-0 text-center" style="width: 40px"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($items as $index => $item)
-                                <tr class="align-middle">
-                                    <td class="px-0 py-3 position-relative" style="overflow: visible !important;">
+                                <tr class="align-middle" wire:key="purchase-item-{{ $index }}">
+                                    <td class="px-1 py-2 position-relative" style="overflow: visible !important;">
                                         <div class="position-relative">
-                                            <input type="text" class="form-control mb-0" placeholder="Search material..."
+                                            <input type="text" class="form-control mb-0 px-2" placeholder="Search..."
                                                 wire:model.live="items.{{ $index }}.name"
                                                 wire:keyup="performSearchMaterial({{ $index }}, $event.target.value)"
-                                                style="height: 48px;">
+                                                style="height: 45px; font-size: 0.9rem;">
 
                                             @if($activeSearchIndex === $index && count($materialResults) > 0)
                                             <div class="search-results">
@@ -634,26 +642,33 @@
                                         <div class="text-danger mt-1" style="font-size: 0.65rem; font-weight: 800; text-transform: uppercase;">Required</div>
                                         @enderror
                                     </td>
-                                    <td class="px-3 py-3">
-                                        <select class="form-select" wire:model="items.{{ $index }}.size" style="height: 48px;">
+                                    <td class="px-1 py-2">
+                                        <select class="form-select px-2" wire:model="items.{{ $index }}.size" style="height: 45px; font-size: 0.9rem;">
                                             <option value="S">S</option>
                                             <option value="M">M</option>
                                             <option value="L">L</option>
                                         </select>
                                     </td>
-                                    <td class="px-3 py-3">
-                                        <div class="input-group" style="height: 48px;">
-                                            <input type="number" class="form-control" wire:model.blur="items.{{ $index }}.quantity" step="0.01">
-                                            <span class="input-group-text bg-white border-start-0 text-muted small px-2">Ton</span>
+                                    <td class="px-1 py-2">
+                                        <div class="input-group" style="height: 45px;">
+                                            <input type="number" class="form-control px-2" wire:model.blur="items.{{ $index }}.quantity" step="0.01" style="font-size: 0.9rem;">
+                                            <span class="input-group-text bg-light border-start-0 text-muted small px-2" style="font-size: 0.8rem;">Ton</span>
                                         </div>
                                     </td>
-                                    <td class="px-3 py-3">
-                                        <div class="input-group" style="height: 48px;">
-                                            <input type="number" class="form-control" wire:model.blur="items.{{ $index }}.unit_price" step="0.01">
+                                    <td class="px-1 py-2">
+                                        <div class="input-group" style="height: 45px;">
+                                            <span class="input-group-text bg-light border-end-0 px-2" style="font-weight: 700; color: #e11d48; font-size: 0.85rem;">¥</span>
+                                            <input type="number" class="form-control border-start-0 px-2" wire:model.blur="items.{{ $index }}.unit_price" step="0.01" style="font-size: 0.9rem;">
                                         </div>
                                     </td>
-                                    <td class="px-3 py-3 text-end fw-bold" style="color: #1e293b; font-size: 1rem;">
-                                        {{ number_format($item['total'] ?? 0, 2) }}
+                                    <td class="px-1 py-2">
+                                        <div class="d-flex align-items-center justify-content-center" style="height: 45px; background: #f0f9ff; border-radius: 8px; padding: 0 0.5rem; border: 1px solid #bae6fd;">
+                                            <span class="fw-bold" style="color: #0284c7; font-size: 0.85rem;">Rs. {{ number_format($item['unit_price_lkr'] ?? 0, 2) }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-1 py-2 text-end" style="font-size: 0.9rem;">
+                                        <div class="fw-bold" style="color: #e11d48;">¥ {{ number_format($item['total'] ?? 0, 2) }}</div>
+                                        <div class="fw-bold mt-1" style="color: #0284c7; font-size: 0.75rem;">Rs. {{ number_format($item['total_lkr'] ?? 0, 2) }}</div>
                                     </td>
                                     <td class="py-3 text-center">
                                         <button class="btn btn-link text-danger p-0" wire:click="removeItem({{ $index }})" style="font-size: 1.2rem;">
@@ -666,19 +681,23 @@
                         </table>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="d-flex justify-content-between align-items-center mt-3">
                         <button class="btn btn-outline-primary fw-bold" wire:click="addItem">
                             <i class="bi bi-plus-circle"></i> Add Material
                         </button>
                         <div class="text-end">
                             <span class="text-uppercase text-muted fw-bold small">Total Amount Due</span>
-                            <h3 class="fw-bold mb-0" style="color: #1e293b">{{ number_format(collect($items)->sum('total'), 2) }}</h3>
+                            <div class="d-flex align-items-baseline gap-3 justify-content-end">
+                                <h4 class="fw-bold mb-0" style="color: #e11d48;">¥ {{ number_format(collect($items)->sum('total'), 2) }}</h4>
+                                <span class="text-muted">≈</span>
+                                <h4 class="fw-bold mb-0" style="color: #0284c7;">Rs. {{ number_format(collect($items)->sum('total_lkr'), 2) }}</h4>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer p-4 border-top">
-                    <button type="button" class="btn btn-light fw-bold px-4 rounded-pill" wire:click="$set('showModal', false)">Discard</button>
-                    <button type="button" class="btn-custom-primary px-5 rounded-pill" wire:click="save">
+                <div class="modal-footer  p-3  border-top">
+                    <button type="button" class="btn btn-light fw-bold  px-3  rounded-pill" wire:click="$set('showModal', false)">Discard</button>
+                    <button type="button" class="btn-custom-primary px-3 rounded-pill" wire:click="save">
                         {{ $po_id ? 'Update Order' : 'Publish Order' }}
                     </button>
                 </div>
@@ -758,8 +777,8 @@
                     <h5 class="modal-title fw-bold">Process Goods Receive Note (GRN)</h5>
                     <button type="button" class="btn-close" wire:click="$set('showGRNModal', false)"></button>
                 </div>
-                <div class="modal-body p-4">
-                    <div class="row mb-4">
+                <div class="modal-body  p-3">
+                    <div class="row mb-3">
                         <div class="col-md-4">
                             <p class="text-muted small text-uppercase fw-bold mb-1">Purchase Order</p>
                             <h5 class="fw-bold">#{{ $selectedPO->order_code }}</h5>
@@ -784,12 +803,13 @@
 
                                     <th class="text-center" style="width: 150px">Receive Now</th>
                                     <th class="text-end" style="width: 170px">Cost Price</th>
+                                    <th class="text-end" style="width: 170px">Line Total</th>
                                     <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($grnItems as $index => $item)
-                                <tr>
+                                <tr wire:key="grn-item-{{ $index }}">
                                     <td>
                                         <div class="fw-bold text-dark">{{ $item['name'] }}</div>
                                     </td>
@@ -801,18 +821,25 @@
                                     <td class="text-center">
                                         @if($item['received'])
                                         <input type="number" class="form-control text-center fw-bold"
-                                            wire:model.live.debounce-1000ms="grnItems.{{ $index }}.received_qty" step="0.01"
+                                            wire:model.live.debounce.300ms="grnItems.{{ $index }}.received_qty" step="0.01"
                                             min="0">
                                         @else
                                         <span class="text-muted fst-italic">Skipped</span>
                                         @endif
                                     </td>
                                     <td>
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-white border-end-0 text-muted px-2">Rs.</span>
-                                            <input type="number" class="form-control border-start-0 text-end fw-bold"
-                                                wire:model.live.debounce-1000ms="grnItems.{{ $index }}.cost_price" step="0.01">
+                                        <div class="input-group" style="height: 40px;">
+                                            <span class="input-group-text bg-light border-end-0 px-2" style="font-weight: 700; color: #e11d48; font-size: 0.85rem;">¥</span>
+                                            <input type="number" class="form-control border-start-0 px-2 fw-bold"
+                                                wire:model.live.debounce.300ms="grnItems.{{ $index }}.cost_price" step="0.01" style="font-size: 0.9rem;">
                                         </div>
+                                        <div class="mt-2 d-flex align-items-center justify-content-center" style="background: #f0f9ff; border-radius: 6px; padding: 0.25rem 0.5rem; border: 1px solid #bae6fd;">
+                                            <span class="fw-bold" style="color: #0284c7; font-size: 0.8rem;">Rs. {{ number_format((float)($item['cost_price'] ?? 0) * (float)($rmb_to_lkr_rate ?? 92), 2) }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="fw-bold text-dark">¥{{ number_format((float)($item['received_qty'] ?? 0) * (float)($item['cost_price'] ?? 0), 2) }}</div>
+                                        <div class="text-muted small" style="font-size: 0.75rem;">Rs. {{ number_format((float)($item['received_qty'] ?? 0) * (float)($item['cost_price'] ?? 0) * (float)($rmb_to_lkr_rate ?? 92), 2) }}</div>
                                     </td>
                                     <td class="text-center">
                                         <div class="form-check form-switch d-flex justify-content-center">
@@ -823,12 +850,25 @@
                                 </tr>
                                 @endforeach
                             </tbody>
+                            <tfoot class="table-light border-top">
+                                <tr>
+                                    <td colspan="5" class="text-end fw-bold">Receipt Grand Total:</td>
+                                    <td class="text-end">
+                                        @php
+                                        $grandTotalRMB = collect($grnItems)->filter(fn($i) => $i['received'] ?? false)->sum(fn($i) => (float)($i['received_qty'] ?? 0) * (float)($i['cost_price'] ?? 0));
+                                        @endphp
+                                        <div class="fw-bold text-dark" style="font-size: 1rem;">¥{{ number_format($grandTotalRMB, 2) }}</div>
+                                        <div class="text-primary fw-bold" style="font-size: 0.85rem;">Rs. {{ number_format($grandTotalRMB * (float)($rmb_to_lkr_rate ?? 92), 2) }}</div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
-                <div class="modal-footer p-4 border-top">
-                    <button type="button" class="btn btn-light fw-bold px-4 rounded-pill" wire:click="$set('showGRNModal', false)">Cancel</button>
-                    <button type="button" class="btn-custom-primary px-5 rounded-pill" wire:click="processGRN">
+                <div class="modal-footer  p-3  border-top">
+                    <button type="button" class="btn btn-light fw-bold  px-3  rounded-pill" wire:click="$set('showGRNModal', false)">Cancel</button>
+                    <button type="button" class="btn-custom-primary px-3 rounded-pill" wire:click="processGRN">
                         <i class="bi bi-check2-circle me-2"></i> Confirm Stock Arrival
                     </button>
                 </div>

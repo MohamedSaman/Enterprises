@@ -130,7 +130,7 @@
         }
 
         .empty-state {
-            padding: 3rem 1rem;
+            padding: 1.5rem 1rem;
             color: #64748b;
         }
 

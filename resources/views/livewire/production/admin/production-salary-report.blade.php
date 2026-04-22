@@ -4,7 +4,7 @@
         .salary-report-shell {
             background: linear-gradient(135deg, #f5f7fb 0%, #f0f4fa 100%);
             min-height: 100vh;
-            padding: 2rem 0;
+            padding: 1rem 0;
         }
 
         .panel-card {
@@ -56,7 +56,7 @@
     </style>
     @endpush
 
-    <div class="panel-card p-4 mb-4">
+    <div class="panel-card  p-3  mb-3">
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
             <div>
                 <div class="hero-title">Production Cost Statement</div>
@@ -85,7 +85,7 @@
     </div>
 
     @if($costStatement)
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-3">
         <div class="col-md-3">
             <div class="summary-stat h-100">
                 <div class="label">Basic Salary Total</div>
@@ -116,7 +116,7 @@
         </div>
     </div>
 
-    <div class="panel-card p-4 mb-4">
+    <div class="panel-card  p-3  mb-3">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
             <div>
                 <h5 class="fw-bold mb-1">Payroll Structure</h5>
@@ -147,7 +147,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="3" class="text-center text-muted py-4">No salary records found for this batch.</td>
+                                <td colspan="3" class="text-center text-muted  py-3">No salary records found for this batch.</td>
                             </tr>
                             @endforelse
                             <tr class="table-light">
@@ -215,7 +215,7 @@
         </div>
     </div>
 
-    <div class="panel-card p-4 mb-4">
+    <div class="panel-card  p-3  mb-3">
         <h5 class="fw-bold mb-3">Profit & Unit Analysis</h5>
         <div class="row g-3">
             <div class="col-md-4">

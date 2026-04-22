@@ -44,7 +44,7 @@
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			padding: 0 2rem;
+			padding: 0 1.25rem;
 			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 			position: sticky;
 			top: 0;
@@ -302,7 +302,7 @@
 			}
 
 			.main-content {
-				padding: 1.5rem;
+				padding: 1rem;
 			}
 		}
 	</style>

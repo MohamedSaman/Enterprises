@@ -229,7 +229,7 @@ class MaterialList extends Component
             ['label' => 'Total Materials', 'value' => $totalMaterialsCount, 'sub' => 'Types registered', 'color' => '#3b82f6', 'icon' => 'bi-layers'],
             ['label' => 'Total Stock', 'value' => number_format($totalStockSum), 'sub' => 'Units available', 'color' => '#10b981', 'icon' => 'bi-box-seam'],
             ['label' => 'Low Stock Alert', 'value' => $lowStockCount, 'sub' => 'Items below reorder level', 'color' => '#f43f5e', 'icon' => 'bi-exclamation-triangle'],
-            ['label' => 'Inventory Value', 'value' => '$' . number_format($inventoryValueSum, 2), 'sub' => 'Total material worth', 'color' => '#f59e0b', 'icon' => 'bi-currency-dollar'],
+            ['label' => 'Inventory Value', 'value' => 'RMB '. number_format($inventoryValueSum, 2), 'sub' => 'Total material worth', 'color' => '#f59e0b' , 'icon' => 'bi-currency-yuan'],
         ];
 
         return view('livewire.production.admin.material-list', [

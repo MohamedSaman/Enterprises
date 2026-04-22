@@ -253,7 +253,7 @@
         }
 
         .modal-body-custom {
-            padding: 2rem;
+            padding: 1.25rem;
         }
 
         .stock-modal-body {
@@ -420,13 +420,13 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="text-center py-5">No materials found.</td>
+                        <td colspan="4" class="text-center   py-3">No materials found.</td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-        <div class="mt-4">
+        <div class="mt-3">
             {{ $materials->links() }}
         </div>
     </div>
@@ -466,7 +466,7 @@
                     </div>
                 </div>
                 <div class="modal-footer modal-footer-custom">
-                    <button type="button" class="btn btn-light rounded-pill px-4" wire:click="$set('showModal', false)">Cancel</button>
+                    <button type="button" class="btn btn-light rounded-pill  px-3" wire:click="$set('showModal', false)">Cancel</button>
                     <button type="button" class="btn-custom" wire:click="saveMaterial">Save Material</button>
                 </div>
             </div>
@@ -510,7 +510,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">No batch records available for this material.</td>
+                                    <td colspan="5" class="text-center  py-3  text-muted">No batch records available for this material.</td>
                                 </tr>
                                 @endforelse
                             </tbody>
@@ -525,7 +525,7 @@
                     </div>
                 </div>
                 <div class="modal-footer modal-footer-custom stock-modal-footer">
-                    <button type="button" class="btn btn-light rounded-pill px-4" wire:click="closeStockModal">Close</button>
+                    <button type="button" class="btn btn-light rounded-pill  px-3" wire:click="closeStockModal">Close</button>
                 </div>
             </div>
         </div>
@@ -554,8 +554,8 @@
                     @endif
                 </div>
                 <div class="modal-footer modal-footer-custom">
-                    <button type="button" class="btn btn-light rounded-pill px-4" wire:click="closeDeleteModal">Cancel</button>
-                    <button type="button" class="btn btn-danger rounded-pill px-4" wire:click="deleteMaterial" @disabled($deleteBlocked)>
+                    <button type="button" class="btn btn-light rounded-pill  px-3" wire:click="closeDeleteModal">Cancel</button>
+                    <button type="button" class="btn btn-danger rounded-pill  px-3" wire:click="deleteMaterial" @disabled($deleteBlocked)>
                         Delete Material
                     </button>
                 </div>

@@ -31,6 +31,7 @@ class PurchaseOrder extends Component
     public $supplier_id = '';
     public $order_date;
     public $items = [];
+    public $rmb_to_lkr_rate = 92;
 
     public $new_supplier_name = '';
     public $new_supplier_businessname = '';
@@ -49,18 +50,18 @@ class PurchaseOrder extends Component
     public $showGRNModal = false;
     public $batch_no = '';
 
-    protected $rules = [
-        'supplier_id' => 'required',
-        'order_date' => 'required|date',
-        'items.*.material_id' => 'required',
-        'items.*.quantity' => 'required|numeric|min:0.01',
-        'items.*.unit_price' => 'required|numeric|min:0',
-    ];
+    // Validation rules moved to save() method to avoid
+    // interfering with GRN modal live-bound inputs.
 
     public function mount()
     {
         $this->suppliers = ProductSupplier::orderBy('name')->get();
         $this->order_date = date('Y-m-d');
+        
+        $settingRate = \App\Models\Setting::where('key', 'production_rmb_to_lkr_rate')->value('value');
+        if ($settingRate) {
+            $this->rmb_to_lkr_rate = (float) $settingRate;
+        }
     }
 
     public function openModal()
@@ -85,6 +86,12 @@ class PurchaseOrder extends Component
         $this->grnItems = [];
         $this->batch_no = '';
         $this->showSupplierCreateModal = false;
+        
+        $settingRate = \App\Models\Setting::where('key', 'production_rmb_to_lkr_rate')->value('value');
+        if ($settingRate) {
+            $this->rmb_to_lkr_rate = (float) $settingRate;
+        }
+
         $this->resetSupplierCreateForm();
     }
 
@@ -162,7 +169,9 @@ class PurchaseOrder extends Component
             'size' => 'S',
             'quantity' => 1,
             'unit_price' => 0,
-            'total' => 0
+            'unit_price_lkr' => 0,
+            'total' => 0,
+            'total_lkr' => 0
         ];
     }
 
@@ -175,20 +184,76 @@ class PurchaseOrder extends Component
 
     public function updated($property)
     {
-        if (!preg_match('/^items\.(\d+)\.(quantity|unit_price)$/', $property, $matches)) {
+        // Recalculate all items when exchange rate changes
+        if ($property === 'rmb_to_lkr_rate') {
+            $this->recalculateAllItems();
             return;
         }
 
-        $index = (int) $matches[1];
-
-        if (!isset($this->items[$index])) {
+        // Handle PO Items Sync
+        if (preg_match('/^items\.(\d+)\.(quantity|unit_price)$/', $property, $matches)) {
+            $index = (int) $matches[1];
+            if (isset($this->items[$index])) {
+                $this->recalculateItem($index);
+            }
             return;
         }
 
+        // Handle GRN Items Sync (Syncing cost_price for same material during GRN)
+        if (preg_match('/^grnItems\.(\d+)\.cost_price$/', $property, $matches)) {
+            $index = (int) $matches[1];
+            if (isset($this->grnItems[$index])) {
+                $materialId = $this->grnItems[$index]['material_id'] ?? null;
+                $costPrice = (float) ($this->grnItems[$index]['cost_price'] ?? 0);
+
+                if (!empty($materialId)) {
+                    foreach ($this->grnItems as $i => $item) {
+                        if ($i !== $index && ($item['material_id'] ?? null) == $materialId) {
+                            $this->grnItems[$i]['cost_price'] = $costPrice;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private function recalculateItem($index)
+    {
+        $materialId = $this->items[$index]['material_id'] ?? null;
+        $unitPriceRmb = (float) ($this->items[$index]['unit_price'] ?? 0);
+        $rate = (float) ($this->rmb_to_lkr_rate ?? 0);
+
+        // If a material is selected, sync this price to all other rows with the same material
+        if (!empty($materialId)) {
+            foreach ($this->items as $i => $item) {
+                if ($i !== $index && ($item['material_id'] ?? null) == $materialId) {
+                    $this->items[$i]['unit_price'] = $unitPriceRmb;
+                    $this->syncCalculations($i);
+                }
+            }
+        }
+
+        $this->syncCalculations($index);
+    }
+
+    private function syncCalculations($index)
+    {
         $quantity = (float) ($this->items[$index]['quantity'] ?? 0);
-        $unitPrice = (float) ($this->items[$index]['unit_price'] ?? 0);
+        $unitPriceRmb = (float) ($this->items[$index]['unit_price'] ?? 0);
+        $rate = (float) ($this->rmb_to_lkr_rate ?? 0);
 
-        $this->items[$index]['total'] = $quantity * $unitPrice;
+        $unitPriceLkr = $unitPriceRmb * $rate;
+
+        $this->items[$index]['unit_price_lkr'] = round($unitPriceLkr, 2);
+        $this->items[$index]['total'] = round($quantity * $unitPriceRmb, 2);
+        $this->items[$index]['total_lkr'] = round($quantity * $unitPriceLkr, 2);
+    }
+
+    private function recalculateAllItems()
+    {
+        foreach ($this->items as $index => $item) {
+            $this->syncCalculations($index);
+        }
     }
 
     public function performSearchMaterial($index, $value)
@@ -213,6 +278,16 @@ class PurchaseOrder extends Component
         if ($material) {
             $this->items[$index]['material_id'] = $material->id;
             $this->items[$index]['name'] = $material->name . ' (' . $material->code . ')';
+            
+            // Auto-fill price if same material exists in other rows
+            foreach ($this->items as $i => $item) {
+                if ($i !== $index && ($item['material_id'] ?? null) == $materialId && !empty($item['unit_price'])) {
+                    $this->items[$index]['unit_price'] = $item['unit_price'];
+                    $this->syncCalculations($index);
+                    break;
+                }
+            }
+
             $this->materialResults = [];
             $this->activeSearchIndex = null;
         }
@@ -261,7 +336,13 @@ class PurchaseOrder extends Component
             return;
         }
 
-        $this->validate();
+        $this->validate([
+            'supplier_id' => 'required',
+            'order_date' => 'required|date',
+            'items.*.material_id' => 'required',
+            'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.unit_price' => 'required|numeric|min:0',
+        ]);
 
         try {
             DB::beginTransaction();
@@ -329,7 +410,9 @@ class PurchaseOrder extends Component
                 'size' => $item->size,
                 'quantity' => $item->quantity,
                 'unit_price' => $item->unit_price,
-                'total' => $item->quantity * $item->unit_price
+                'unit_price_lkr' => round($item->unit_price * $this->rmb_to_lkr_rate, 2),
+                'total' => $item->quantity * $item->unit_price,
+                'total_lkr' => round($item->quantity * $item->unit_price * $this->rmb_to_lkr_rate, 2)
             ];
         }
         $this->showModal = true;
@@ -478,8 +561,9 @@ class PurchaseOrder extends Component
                     ]);
                 }
 
-                $poItem->received_quantity = $receivedQty;
-                $poItem->status = $poItem->received_quantity >= (float) $poItem->quantity ? 'received' : 'partial';
+                $newTotal = (float) ($poItem->received_quantity ?? 0) + $receivedQty;
+                $poItem->received_quantity = $newTotal;
+                $poItem->status = $newTotal >= (float) $poItem->quantity ? 'received' : 'pending';
                 $poItem->save();
 
                 // If GRN changed the price, align existing batches for the same PO/material/size.
@@ -502,7 +586,7 @@ class PurchaseOrder extends Component
                 return (float) $poItem->quantity * (float) ($poItem->unit_price ?? 0);
             });
 
-            $this->selectedPO->status = $allReceived ? 'received' : 'partial';
+            $this->selectedPO->status = $allReceived ? 'complete' : 'received';
             $this->selectedPO->received_date = now();
             $this->selectedPO->total_amount = $orderTotal;
             $this->selectedPO->due_amount = $orderTotal;

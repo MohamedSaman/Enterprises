@@ -23,6 +23,25 @@ class GRN extends Component
     public $batch_no = '';
     public $grnItems = [];
 
+    public function updated($property)
+    {
+        if (preg_match('/^grnItems\.(\d+)\.cost_price$/', $property, $matches)) {
+            $index = (int) $matches[1];
+            if (isset($this->grnItems[$index])) {
+                $materialId = $this->grnItems[$index]['material_id'] ?? null;
+                $costPrice = (float) ($this->grnItems[$index]['cost_price'] ?? 0);
+
+                if (!empty($materialId)) {
+                    foreach ($this->grnItems as $i => $item) {
+                        if ($i !== $index && ($item['material_id'] ?? null) == $materialId) {
+                            $this->grnItems[$i]['cost_price'] = $costPrice;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public function selectPO($poId)
     {
         $this->selectedPO = PO::with(['supplier', 'items.material'])->find($poId);
@@ -78,7 +97,7 @@ class GRN extends Component
                     if ($poItem->received_quantity >= $poItem->quantity) {
                         $poItem->status = 'received';
                     } else {
-                        $poItem->status = 'partial';
+                        $poItem->status = 'pending';
                         $allReceived = false;
                     }
                     $poItem->save();
@@ -89,9 +108,9 @@ class GRN extends Component
 
             // 3. Update PO status
             if ($allReceived) {
-                $this->selectedPO->status = 'received';
+                $this->selectedPO->status = 'complete';
             } else {
-                $this->selectedPO->status = 'partial';
+                $this->selectedPO->status = 'received';
             }
             $this->selectedPO->received_date = now();
             $this->selectedPO->save();
@@ -111,7 +130,7 @@ class GRN extends Component
     public function render()
     {
         $query = PO::where('order_type', 'production')
-            ->whereIn('status', ['complete', 'partial'])
+            ->whereIn('status', ['pending', 'received'])
             ->with(['supplier']);
 
         if ($this->searchPO) {
