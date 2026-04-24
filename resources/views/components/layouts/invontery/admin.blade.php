@@ -917,37 +917,37 @@
                         <ul class="nav flex-column ms-3">
                             <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.manage-admin') }}">
-                <i class="bi bi-shield-lock"></i> <span>Manage Admin</span>
-                </a>
+                                    <i class="bi bi-shield-lock"></i> <span>Manage Admin</span>
+                                </a>
+                            </li>
+                            <!-- Disabled: Manage Staff -->
+                            <!-- Disabled: Staff Attendance -->
+                            <li class="nav-item">
+                                <a class="nav-link py-2 disabled" href="#">
+                                    <i class="bi bi-calendar-check"></i> <span>Staff Attendance</span>
+                                </a>
+                            </li>
+                            <!-- Disabled: Staff Salary -->
+                            <li class="nav-item">
+                                <a class="nav-link py-2 disabled" href="#">
+                                    <i class="bi bi-currency-dollar"></i> <span>Staff Salary</span>
+                                </a>
+                            </li>
+                            <!-- Disabled: Loan Management -->
+                            <li class="nav-item">
+                                <a class="nav-link py-2 disabled" href="#">
+                                    <i class="bi bi-credit-card"></i> <span>Loan Management</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="{{ route('admin.manage-customer') }}">
+                                    <i class="bi bi-people"></i> <span>Manage Customer</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </li>
-                <!-- Disabled: Manage Staff -->
-                <!-- Disabled: Staff Attendance -->
-                <li class="nav-item">
-                    <a class="nav-link py-2 disabled" href="#">
-                        <i class="bi bi-calendar-check"></i> <span>Staff Attendance</span>
-                    </a>
-                </li>
-                <!-- Disabled: Staff Salary -->
-                <li class="nav-item">
-                    <a class="nav-link py-2 disabled" href="#">
-                        <i class="bi bi-currency-dollar"></i> <span>Staff Salary</span>
-                    </a>
-                </li>
-                <!-- Disabled: Loan Management -->
-                <li class="nav-item">
-                    <a class="nav-link py-2 disabled" href="#">
-                        <i class="bi bi-credit-card"></i> <span>Loan Management</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link py-2" href="{{ route('admin.manage-customer') }}">
-                        <i class="bi bi-people"></i> <span>Manage Customer</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-        </li>
-        --}}
+            --}}
         <li class="nav-item">
             <a class="nav-link dropdown-toggle" href="#inventorySubmenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="inventorySubmenu">
                 <i class="bi bi-basket3"></i> <span>Products</span>
@@ -959,7 +959,7 @@
                             <i class="bi bi-card-list"></i> <span>List Product</span>
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                         <a class="nav-link py-2" href="{{ route('admin.Product-brand') }}">
                             <i class="bi bi-tags"></i> <span>Product Brand</span>
                         </a>
@@ -968,7 +968,7 @@
                         <a class="nav-link py-2" href="{{ route('admin.Product-category') }}">
                             <i class="bi bi-tags-fill"></i> <span>Product Category</span>
                         </a>
-                    </li>
+                    </li> -->
                 </ul>
             </div>
         </li>
@@ -1015,7 +1015,7 @@
         </ul>
     </div>
     </li>
-    <li class="nav-item">
+   {{-- <li class="nav-item">
         <a class="nav-link dropdown-toggle" href="#stockSubmenu" data-bs-toggle="collapse" role="button"
             aria-expanded="false" aria-controls="stockSubmenu">
             <i class="bi bi-file-earmark-text"></i> <span>Quotation</span>
@@ -1032,17 +1032,17 @@
                         <i class="bi bi-card-list"></i> <span>List Quotation</span>
                     </a>
                 </li>
-                {{--
+                
                             <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.Product-stock-details') }}">
                 <i class="bi bi-shield-lock"></i> <span>Product Stock</span>
                 </a>
     </li>
-    --}}
+    
     </ul>
     </div>
-    </li>
-    <li class="nav-item">
+    </li>--}}
+    <!-- <li class="nav-item">
         <a class="nav-link dropdown-toggle" href="#purchaseSubmenu" data-bs-toggle="collapse" role="button"
             aria-expanded="false" aria-controls="purchaseSubmenu">
             <i class="bi bi-truck"></i><span>Purchase</span>
@@ -1061,7 +1061,7 @@
                 </li>
             </ul>
         </div>
-    </li>
+    </li> -->
     <li class="nav-item">
         <a class="nav-link dropdown-toggle" href="#returnSubmenu" data-bs-toggle="collapse" role="button"
             aria-expanded="false" aria-controls="returnSubmenu">
@@ -1226,11 +1226,11 @@
             <i class="bi bi-graph-up-arrow"></i> <span>Profit & Loss</span>
         </a>
     </li>
-    <li>
+    <!-- <li>
         <a class="nav-link" href="{{ route('admin.profit-share') }}">
             <i class="bi bi-people-fill"></i> <span>Profit Share</span>
         </a>
-    </li>
+    </li> -->
     <li>
         <a class="nav-link" href="{{ route('admin.settings') }}">
             <i class="bi bi-gear"></i> <span>Settings</span>

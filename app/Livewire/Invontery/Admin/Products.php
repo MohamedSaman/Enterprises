@@ -148,6 +148,43 @@ class Products extends Component
         $this->discount_price = 0;
     }
 
+    /**
+     * Get summary of items available in production audit for transfer
+     */
+    public function getProductionAuditSummaryProperty(): array
+    {
+        $batches = \App\Models\ProductionBatch::query()
+            ->withSum('days as produced_total', 'produced_qty')
+            ->withSum('days as produced_s_total', 'produced_s_qty')
+            ->withSum('days as produced_m_total', 'produced_m_qty')
+            ->withSum('days as produced_l_total', 'produced_l_qty')
+            ->get();
+
+        $summary = ['S' => 0, 'M' => 0, 'L' => 0, 'total' => 0];
+
+        foreach ($batches as $batch) {
+            $s = (int)($batch->produced_s_total ?? 0);
+            $m = (int)($batch->produced_m_total ?? 0);
+            $l = (int)($batch->produced_l_total ?? 0);
+            $total = (int)($batch->produced_total ?? 0);
+
+            // Fallback for batches that don't have size-specific production logs but have a single size
+            if (($s + $m + $l) === 0 && $total > 0) {
+                $size = strtoupper((string)($batch->size ?? ''));
+                if ($size === 'S') $s = $total;
+                elseif ($size === 'M') $m = $total;
+                elseif ($size === 'L') $l = $total;
+            }
+
+            $summary['S'] += max(0, $s - (int)($batch->transferred_s_qty ?? 0));
+            $summary['M'] += max(0, $m - (int)($batch->transferred_m_qty ?? 0));
+            $summary['L'] += max(0, $l - (int)($batch->transferred_l_qty ?? 0));
+        }
+
+        $summary['total'] = $summary['S'] + $summary['M'] + $summary['L'];
+        return $summary;
+    }
+
     public function render()
     {
         $brands = BrandList::orderBy('brand_name')->get();

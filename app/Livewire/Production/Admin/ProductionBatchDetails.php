@@ -475,6 +475,28 @@ class ProductionBatchDetails extends Component
             'L' => (float) ($sizeFactors['production_size_factor_l'] ?? 0.75),
         ];
 
+        $producedTotals = [
+            'S' => (int) $this->batch->days->sum('produced_s_qty'),
+            'M' => (int) $this->batch->days->sum('produced_m_qty'),
+            'L' => (int) $this->batch->days->sum('produced_l_qty'),
+        ];
+
+        if (!empty($this->batch->allocated_breakdown)) {
+            $breakdown = [];
+            foreach ($this->batch->allocated_breakdown as $size => $ton) {
+                $factor = (float) ($factors[$size] ?? 0);
+                $estimated = ($ton > 0 && $factor > 0) ? (int) floor(($ton * 1000) / $factor) : 0;
+                
+                $breakdown[] = [
+                    'size' => $size,
+                    'ton' => (float) $ton,
+                    'estimated' => $estimated,
+                    'produced' => $producedTotals[$size] ?? 0,
+                ];
+            }
+            return collect($breakdown)->sortByDesc(fn($item) => array_search($item['size'], ['S', 'M', 'L']))->values()->all();
+        }
+
         $rows = collect();
 
         if (!empty($this->batch->purchase_batch_no)) {
@@ -503,7 +525,7 @@ class ProductionBatchDetails extends Component
         }
 
         return $rows->groupBy(fn($row) => strtoupper((string) $row->size))
-            ->map(function ($sizeRows, $size) use ($factors) {
+            ->map(function ($sizeRows, $size) use ($factors, $producedTotals) {
                 $ton = (float) $sizeRows->sum('quantity');
                 $factor = (float) ($factors[$size] ?? 0);
                 $estimated = ($ton > 0 && $factor > 0) ? (int) floor(($ton * 1000) / $factor) : 0;
@@ -512,9 +534,10 @@ class ProductionBatchDetails extends Component
                     'size' => $size,
                     'ton' => $ton,
                     'estimated' => $estimated,
+                    'produced' => $producedTotals[$size] ?? 0,
                 ];
             })
-            ->sortKeys()
+            ->sortByDesc(fn($item) => array_search($item['size'], ['S', 'M', 'L']))
             ->values()
             ->all();
     }

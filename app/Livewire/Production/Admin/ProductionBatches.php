@@ -45,6 +45,7 @@ class ProductionBatches extends Component
     public float $availableMaterialTon = 0;
     public array $selectedBatchSummary = [];
     public array $estimatedTargetBreakdown = [];
+    public array $allocatedTonBreakdown = [];
     public array $sizeFactors = [
         'S' => 0.3,
         'M' => 0.5,
@@ -84,9 +85,15 @@ class ProductionBatches extends Component
         $this->production_material_batch_id = (string) ($batch->production_material_batch_id ?? '');
         $this->purchase_batch_no = $this->normalizePurchaseBatchNo((string) ($batch->purchase_batch_no ?? ''));
         $this->planned_material_ton = (string) ($batch->planned_material_ton ?: '');
+        $this->production_material_batch_id = (string) ($batch->production_material_batch_id ?? '');
+        $this->purchase_batch_no = $this->normalizePurchaseBatchNo((string) ($batch->purchase_batch_no ?? ''));
+        $this->planned_material_ton = (string) ($batch->planned_material_ton ?: '');
         $this->estimated_days = (string) ($batch->estimated_days ?: '');
         $this->start_date = optional($batch->start_date)->format('Y-m-d') ?: now()->format('Y-m-d');
         $this->target_qty = (int) $batch->target_qty;
+        
+        $this->allocatedTonBreakdown = $batch->allocated_breakdown ?: [strtoupper(trim((string)$batch->size)) => (float)$batch->planned_material_ton];
+        
         $this->refreshAvailableMaterialTon();
         $this->recalculateEstimatedTarget();
 
@@ -120,6 +127,7 @@ class ProductionBatches extends Component
         $this->availableMaterialTon = 0;
         $this->selectedBatchSummary = [];
         $this->estimatedTargetBreakdown = [];
+        $this->allocatedTonBreakdown = [];
         $this->start_date = now()->format('Y-m-d');
         $this->supervisor_id = '';
         $this->staff_ids = [];
@@ -214,6 +222,7 @@ class ProductionBatches extends Component
                     'planned_material_ton' => (float) $this->planned_material_ton,
                     'estimated_days' => (int) $this->estimated_days,
                     'target_qty' => (int) $this->target_qty,
+                    'allocated_breakdown' => $this->allocatedTonBreakdown,
                     'completed_qty' => 0,
                     'supervisor_id' => (int) $this->supervisor_id,
                     'created_by' => (int) Auth::id(),
@@ -223,17 +232,21 @@ class ProductionBatches extends Component
 
                 $batch->staffMembers()->sync(array_map('intval', $this->staff_ids));
 
-                $remainingToConsume = (float) $this->planned_material_ton;
-
+                // Consume stock per-size based on allocated amounts
                 foreach ($lockedBatches as $lockedBatch) {
-                    if ($remainingToConsume <= 0) {
-                        break;
+                    $batchSize = strtoupper(trim((string) $lockedBatch->size));
+                    $allocatedForSize = (float) ($this->allocatedTonBreakdown[$batchSize] ?? 0);
+
+                    if ($allocatedForSize <= 0) {
+                        continue;
                     }
 
-                    $consume = min((float) $lockedBatch->remaining_quantity, $remainingToConsume);
+                    $consume = min((float) $lockedBatch->remaining_quantity, $allocatedForSize);
                     $lockedBatch->remaining_quantity = max(0, (float) $lockedBatch->remaining_quantity - $consume);
                     $lockedBatch->save();
-                    $remainingToConsume -= $consume;
+
+                    // Reduce allocated amount for this size (in case multiple rows share same size)
+                    $this->allocatedTonBreakdown[$batchSize] = $allocatedForSize - $consume;
                 }
             });
         } catch (\Throwable $exception) {
@@ -301,8 +314,30 @@ class ProductionBatches extends Component
         try {
             DB::transaction(function () use ($selectedBatch, $groupedBatches) {
                 $batch = ProductionBatch::findOrFail($this->editingBatchId);
+                $oldAllocated = $batch->allocated_breakdown ?: [strtoupper(trim((string)$batch->size)) => (float)$batch->planned_material_ton];
 
-                $storedSize = $this->resolveSizeForStorage($groupedBatches);
+                $lockedBatches = ProductionMaterialBatch::query()
+                    ->lockForUpdate()
+                    ->where('production_material_id', (int) $this->production_material_id)
+                    ->orderBy('created_at')
+                    ->orderBy('id')
+                    ->get()
+                    ->filter(function ($b) {
+                        return $this->normalizePurchaseBatchNo((string) $b->batch_no) === $this->normalizePurchaseBatchNo((string) $this->purchase_batch_no);
+                    })
+                    ->values();
+
+                // Revert old allocation
+                foreach ($oldAllocated as $size => $amount) {
+                    if ($amount <= 0) continue;
+                    $row = $lockedBatches->firstWhere(fn($b) => strtoupper(trim((string)$b->size)) === $size);
+                    if ($row) {
+                        $row->remaining_quantity += $amount;
+                        $row->save();
+                    }
+                }
+
+                $storedSize = $this->resolveSizeForStorage($lockedBatches);
 
                 $batch->update([
                     'size' => $storedSize,
@@ -311,6 +346,7 @@ class ProductionBatches extends Component
                     'purchase_batch_no' => $this->normalizePurchaseBatchNo((string) $this->purchase_batch_no),
                     'start_date' => $this->start_date,
                     'planned_material_ton' => (float) $this->planned_material_ton,
+                    'allocated_breakdown' => $this->allocatedTonBreakdown,
                     'estimated_days' => (int) $this->estimated_days,
                     'target_qty' => (int) $this->target_qty,
                     'supervisor_id' => (int) $this->supervisor_id,
@@ -318,6 +354,23 @@ class ProductionBatches extends Component
                 ]);
 
                 $batch->staffMembers()->sync(array_map('intval', $this->staff_ids));
+
+                // Consume new allocation
+                $remainingAllocations = $this->allocatedTonBreakdown;
+                foreach ($lockedBatches as $lockedBatch) {
+                    $batchSize = strtoupper(trim((string) $lockedBatch->size));
+                    $allocatedForSize = (float) ($remainingAllocations[$batchSize] ?? 0);
+
+                    if ($allocatedForSize <= 0) {
+                        continue;
+                    }
+
+                    $consume = min((float) $lockedBatch->remaining_quantity, $allocatedForSize);
+                    $lockedBatch->remaining_quantity = max(0, (float) $lockedBatch->remaining_quantity - $consume);
+                    $lockedBatch->save();
+
+                    $remainingAllocations[$batchSize] = $allocatedForSize - $consume;
+                }
 
                 if ((int) $batch->target_qty > 0 && (int) $batch->completed_qty >= (int) $batch->target_qty) {
                     $batch->status = 'completed';
@@ -540,18 +593,55 @@ class ProductionBatches extends Component
 
     public function updatedProductionMaterialBatchId(): void
     {
+        $this->allocatedTonBreakdown = [];
         $this->refreshAvailableMaterialTon();
         $this->recalculateEstimatedTarget();
     }
 
     public function updatedPurchaseBatchNo(): void
     {
+        $this->allocatedTonBreakdown = [];
         $this->refreshAvailableMaterialTon();
         $this->recalculateEstimatedTarget();
     }
 
     public function updatedPlannedMaterialTon(): void
     {
+        $this->recalculateEstimatedTarget();
+    }
+
+    public function updated($property, $value = null): void
+    {
+        if (str_starts_with($property, 'allocatedTonBreakdown.')) {
+            $this->handleAllocatedTonBreakdownUpdate();
+        }
+    }
+
+    private function handleAllocatedTonBreakdownUpdate(): void
+    {
+        $summary = $this->selectedBatchSummary ?: $this->availableMaterialBatches->firstWhere('purchase_batch_no', $this->purchase_batch_no);
+        if (!$summary) {
+            return;
+        }
+
+        // Clamp each allocated value to 0..available and rebuild
+        $clamped = [];
+        foreach (($summary['size_breakdown'] ?? []) as $sizeRow) {
+            $size = (string) ($sizeRow['size'] ?? '');
+            $available = (float) ($sizeRow['remaining_quantity'] ?? 0);
+            $allocated = isset($this->allocatedTonBreakdown[$size])
+                ? (float) $this->allocatedTonBreakdown[$size]
+                : $available;
+            $clamped[$size] = max(0, min($allocated, $available));
+        }
+        $this->allocatedTonBreakdown = $clamped;
+
+        // Recalculate planned_material_ton as sum of allocated
+        $totalAllocated = array_sum($clamped);
+        $this->planned_material_ton = $totalAllocated > 0
+            ? (string) number_format($totalAllocated, 3, '.', '')
+            : '';
+
         $this->recalculateEstimatedTarget();
     }
 
@@ -576,6 +666,7 @@ class ProductionBatches extends Component
             $this->purchase_batch_no = '';
             $this->selectedBatchSummary = [];
             $this->estimatedTargetBreakdown = [];
+            $this->allocatedTonBreakdown = [];
             return;
         }
 
@@ -589,6 +680,7 @@ class ProductionBatches extends Component
             $this->purchase_batch_no = '';
             $this->selectedBatchSummary = [];
             $this->estimatedTargetBreakdown = [];
+            $this->allocatedTonBreakdown = [];
             $this->recalculateEstimatedTarget();
             return;
         }
@@ -605,6 +697,10 @@ class ProductionBatches extends Component
 
         $this->selectedBatchSummary = $matchedBatch;
         $this->availableMaterialTon = (float) ($matchedBatch['remaining_quantity'] ?? 0);
+
+        // Initialize allocatedTonBreakdown with full available stock per size
+        $this->initAllocatedBreakdownFromSummary($matchedBatch);
+
         $this->planned_material_ton = $this->availableMaterialTon > 0
             ? (string) number_format($this->availableMaterialTon, 3, '.', '')
             : '';
@@ -621,19 +717,77 @@ class ProductionBatches extends Component
 
         $group = $this->availableMaterialBatches->firstWhere('purchase_batch_no', $this->purchase_batch_no);
 
+        if (!$group && $this->isEditMode && $this->purchase_batch_no) {
+            $rows = ProductionMaterialBatch::query()
+                ->where('production_material_id', (int) $this->production_material_id)
+                ->get()
+                ->filter(fn($b) => $this->normalizePurchaseBatchNo((string) $b->batch_no) === $this->normalizePurchaseBatchNo((string) $this->purchase_batch_no))
+                ->values();
+                
+            if ($rows->isNotEmpty()) {
+                $sizeBreakdown = $rows->groupBy(fn($row) => strtoupper((string) $row->size))
+                    ->map(function ($sizeRows, $size) {
+                        return [
+                            'size' => $size,
+                            'remaining_quantity' => (float) $sizeRows->sum('remaining_quantity'),
+                        ];
+                    })->sortKeys()->values()->all();
+                    
+                $group = [
+                    'purchase_batch_no' => $this->purchase_batch_no,
+                    'representative_id' => (int) $rows->first()->id,
+                    'remaining_quantity' => (float) $rows->sum('remaining_quantity'),
+                    'size_breakdown' => $sizeBreakdown,
+                    'raw_batch_nos' => $rows->pluck('batch_no')->values()->all(),
+                ];
+            }
+        }
+
         if (!$group) {
             $this->refreshSuggestedMaterialBatch();
             return;
+        }
+
+        if ($this->isEditMode && $this->editingBatchId) {
+            $batch = ProductionBatch::find($this->editingBatchId);
+            $oldAllocated = $batch ? ($batch->allocated_breakdown ?: [strtoupper(trim((string)$batch->size)) => (float)$batch->planned_material_ton]) : [];
+            
+            $totalRemaining = 0;
+            foreach ($group['size_breakdown'] as &$sizeRow) {
+                $size = $sizeRow['size'];
+                $allocated = (float) ($oldAllocated[$size] ?? 0);
+                $sizeRow['remaining_quantity'] += $allocated;
+                $totalRemaining += $sizeRow['remaining_quantity'];
+            }
+            $group['remaining_quantity'] = $totalRemaining;
         }
 
         $this->production_material_batch_id = (string) ($group['representative_id'] ?? '');
         $this->availableMaterialTon = (float) ($group['remaining_quantity'] ?? 0);
         $this->purchase_batch_no = (string) ($group['purchase_batch_no'] ?? '');
         $this->selectedBatchSummary = $group;
-        $this->planned_material_ton = $this->availableMaterialTon > 0
-            ? (string) number_format($this->availableMaterialTon, 3, '.', '')
+
+        if (empty($this->allocatedTonBreakdown)) {
+            $this->initAllocatedBreakdownFromSummary($group);
+        }
+
+        // Always sync planned_material_ton with the current allocation!
+        $totalAllocated = array_sum($this->allocatedTonBreakdown ?: []);
+        $this->planned_material_ton = $totalAllocated > 0
+            ? (string) number_format($totalAllocated, 3, '.', '')
             : '';
+            
         $this->recalculateEstimatedTarget();
+    }
+
+    private function initAllocatedBreakdownFromSummary(array $summary): void
+    {
+        $allocated = [];
+        foreach (($summary['size_breakdown'] ?? []) as $sizeRow) {
+            $size = (string) ($sizeRow['size'] ?? '');
+            $allocated[$size] = (float) ($sizeRow['remaining_quantity'] ?? 0);
+        }
+        $this->allocatedTonBreakdown = $allocated;
     }
 
     private function normalizePurchaseBatchNo(string $batchNo): string
@@ -659,10 +813,14 @@ class ProductionBatches extends Component
 
         $normalizedPurchaseBatchNo = $this->normalizePurchaseBatchNo($this->purchase_batch_no);
 
-        return ProductionMaterialBatch::query()
-            ->where('production_material_id', (int) $this->production_material_id)
-            ->where('remaining_quantity', '>', 0)
-            ->orderBy('created_at')
+        $query = ProductionMaterialBatch::query()
+            ->where('production_material_id', (int) $this->production_material_id);
+
+        if (!$this->isEditMode) {
+            $query->where('remaining_quantity', '>', 0);
+        }
+
+        return $query->orderBy('created_at')
             ->orderBy('id')
             ->get()
             ->filter(function ($batch) use ($normalizedPurchaseBatchNo) {
@@ -706,13 +864,22 @@ class ProductionBatches extends Component
 
         foreach (($summary['size_breakdown'] ?? []) as $sizeRow) {
             $size = (string) ($sizeRow['size'] ?? '');
-            $ton = (float) ($sizeRow['remaining_quantity'] ?? 0);
+            $availableTon = (float) ($sizeRow['remaining_quantity'] ?? 0);
+
+            // Use allocated amount if set, otherwise use full available
+            $allocatedTon = isset($this->allocatedTonBreakdown[$size])
+                ? (float) $this->allocatedTonBreakdown[$size]
+                : $availableTon;
+            // Clamp to 0..available
+            $allocatedTon = max(0, min($allocatedTon, $availableTon));
+
             $factor = (float) ($this->sizeFactors[$size] ?? 0);
-            $estimated = ($ton > 0 && $factor > 0) ? (int) floor(($ton * 1000) / $factor) : 0;
+            $estimated = ($allocatedTon > 0 && $factor > 0) ? (int) floor(($allocatedTon * 1000) / $factor) : 0;
 
             $breakdown[] = [
                 'size' => $size,
-                'ton' => $ton,
+                'available_ton' => $availableTon,
+                'allocated_ton' => $allocatedTon,
                 'estimated' => $estimated,
             ];
 
@@ -722,6 +889,12 @@ class ProductionBatches extends Component
         $this->estimatedTargetBreakdown = $breakdown;
         $this->estimated_target_qty = $totalEstimated;
         $this->target_qty = $totalEstimated;
+
+        // Update planned_material_ton as sum of allocations
+        $totalAllocated = array_sum(array_column($breakdown, 'allocated_ton'));
+        $this->planned_material_ton = $totalAllocated > 0
+            ? (string) number_format($totalAllocated, 3, '.', '')
+            : '';
     }
 
     public function render()

@@ -352,6 +352,7 @@
                                     <th>Size</th>
                                     <th class="text-end">Material (ton)</th>
                                     <th class="text-end">Estimated Target</th>
+                                    <th class="text-end">Produced Items</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -360,10 +361,11 @@
                                     <td class="fw-bold">{{ $row['size'] }}</td>
                                     <td class="text-end">{{ number_format((float) $row['ton'], 3) }}</td>
                                     <td class="text-end fw-bold">{{ number_format((int) $row['estimated']) }} pcs</td>
+                                    <td class="text-end fw-bold text-success">{{ number_format((int) $row['produced']) }} pcs</td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="3" class="text-center text-muted">No size-wise estimate data available for this batch.</td>
+                                    <td colspan="4" class="text-center text-muted">No size-wise estimate data available for this batch.</td>
                                 </tr>
                                 @endforelse
                             </tbody>
@@ -373,6 +375,7 @@
                                     <th>Total</th>
                                     <th class="text-end">{{ number_format(collect($estimatedTargetSizeBreakdown)->sum('ton'), 3) }}</th>
                                     <th class="text-end">{{ number_format((int) collect($estimatedTargetSizeBreakdown)->sum('estimated')) }} pcs</th>
+                                    <th class="text-end text-success">{{ number_format((int) collect($estimatedTargetSizeBreakdown)->sum('produced')) }} pcs</th>
                                 </tr>
                             </tfoot>
                             @endif
@@ -405,7 +408,7 @@
                                 <th>Date</th>
                                 <th class="text-end">Produced</th>
                                 <th class="text-end">Expenses</th>
-                                <th class="text-end">Commissions</th>
+                                
                             </tr>
                         </thead>
                         <tbody>
@@ -415,14 +418,10 @@
                                 <td>{{ $day->work_date?->format('M d, Y') }}</td>
                                 <td class="text-end">{{ number_format($day->produced_qty) }}</td>
                                 <td class="text-end">{{ number_format($day->expense_amount, 2) }}</td>
-                                <td class="text-end">
-                                    {{ number_format(collect($day->staff_commissions ?? [])->sum('amount'), 2) }}
-
-                                </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="text-center  py-3  text-muted">No day logs yet.</td>
+                                <td colspan="4" class="text-center  py-3  text-muted">No day logs yet.</td>
                             </tr>
                             @endforelse
                         </tbody>

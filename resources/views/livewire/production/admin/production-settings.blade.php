@@ -114,7 +114,7 @@
         </div>
     </div>
 
-    <div class="collapse-card">
+    <div class="collapse-card mt-3">
         <button type="button" class="collapse-header" wire:click="$toggle('showSizeSettingsSection')">
             <span>
                 <i class="bi bi-rulers fs-5 me-3 text-info"></i>
@@ -153,14 +153,17 @@
                 </div>
 
                 <div class="mt-3">
-                    <button class="btn-custom" wire:click="saveSettings">Save Settings</button>
+                    <button class="btn-custom" wire:click="saveSettings">
+                        <span wire:loading.remove wire:target="saveSettings">Save Settings</span>
+                        <span wire:loading wire:target="saveSettings">Saving...</span>
+                    </button>
                 </div>
             </div>
         </div>
         @endif
     </div>
 
-    <div class="collapse-card section-spacer">
+    <div class="collapse-card mt-3 section-spacer">
         <button type="button" class="collapse-header" wire:click="$toggle('showCommissionSettingsSection')">
             <span>
                 <i class="bi bi-cash-coin fs-5 me-3 text-success"></i>
@@ -199,7 +202,10 @@
                 </div>
 
                 <div class="mt-3">
-                    <button class="btn-custom" wire:click="saveSettings">Save Settings</button>
+                    <button class="btn-custom" wire:click="saveSettings">
+                        <span wire:loading.remove wire:target="saveSettings">Save Settings</span>
+                        <span wire:loading wire:target="saveSettings">Saving...</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -233,10 +239,138 @@
                 </div>
 
                 <div class="mt-3">
-                    <button class="btn-custom" wire:click="saveSettings">Save Settings</button>
+                    <button class="btn-custom" wire:click="saveSettings">
+                        <span wire:loading.remove wire:target="saveSettings">Save Settings</span>
+                        <span wire:loading wire:target="saveSettings">Saving...</span>
+                    </button>
                 </div>
             </div>
         </div>
         @endif
     </div>
+
+    <div class="collapse-card mt-3 section-spacer">
+        <button type="button" class="collapse-header" wire:click="$toggle('showSalarySettingsSection')">
+            <span>
+                <i class="bi bi-wallet2 fs-5 me-3 text-primary"></i>
+                Salary & Payroll Settings
+            </span>
+            <i class="bi {{ $showSalarySettingsSection ? 'bi-chevron-up' : 'bi-chevron-down' }} fs-4 text-secondary"></i>
+        </button>
+
+        @if($showSalarySettingsSection)
+        <div class="collapse-content">
+            <div class="section-card">
+                <p class="text-muted mb-3">Configure base settings used when generating monthly salary reports, including attendance bonuses, EPF/ETF deductions, and overtime calculations.</p>
+
+                <h6 class="fw-bold mb-3 text-primary border-bottom pb-2">Base & Attendance</h6>
+                <div class="row g-2 mb-4">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Working Days/Month</label>
+                        <input type="number" min="1" class="form-control" wire:model="salary_working_days_per_month">
+                        @error('salary_working_days_per_month') <span class="text-danger small">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Working Hours/Day</label>
+                        <input type="number" min="1" class="form-control" wire:model="salary_working_hours_per_day">
+                        @error('salary_working_hours_per_day') <span class="text-danger small">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Yearly Paid Leave</label>
+                        <input type="number" step="0.5" min="0" class="form-control" wire:model="salary_paid_leave_days">
+                        <div class="small text-muted mt-1">Converted to monthly</div>
+                        @error('salary_paid_leave_days') <span class="text-danger small">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Attendance Bonus</label>
+                        <input type="number" step="0.01" min="0" class="form-control" wire:model="salary_attendance_bonus">
+                        <div class="small text-muted mt-1">Attendance Bonus (Rs)</div>
+                        @error('salary_attendance_bonus') <span class="text-danger small">{{ $message }}</span> @enderror
+                    </div>
+                    
+                    <div class="col-md-3 ">
+                        <label class="form-label fw-bold">Min Attendance For Bonus</label>
+                        <input type="number" min="1" class="form-control" wire:model="salary_min_attendance_for_bonus">
+                        <div class="small text-muted mt-1">Days for monthly bonus</div>
+                        @error('salary_min_attendance_for_bonus') <span class="text-danger small">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Min Attendance Full Commission</label>
+                        <input type="number" min="1" class="form-control" wire:model="salary_min_attendance_full_commission">
+                        <div class="small text-muted mt-1">Days for 100% commission</div>
+                        @error('salary_min_attendance_full_commission') <span class="text-danger small">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-3 text-primary border-bottom pb-2">Rates & Multipliers</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Overtime Multiplier</label>
+                        <input type="number" step="0.1" min="1" class="form-control" wire:model="salary_overtime_multiplier">
+                        <div class="small text-muted mt-1">E.g. 1.5 for time-and-a-half</div>
+                        @error('salary_overtime_multiplier') <span class="text-danger small">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Supervisor Com. Multiplier</label>
+                        <input type="number" step="0.1" min="1" class="form-control" wire:model="salary_supervisor_commission_multiplier">
+                        <div class="small text-muted mt-1">E.g. 2 for double commission</div>
+                        @error('salary_supervisor_commission_multiplier') <span class="text-danger small">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-3 text-primary border-bottom pb-2">EPF/ETF Deductions</h6>
+                <div class="row g-3 mb-2">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">EPF Employee Rate (%)</label>
+                        <input type="number" step="0.1" min="0" class="form-control" wire:model="salary_epf_employee_rate">
+                        @error('salary_epf_employee_rate') <span class="text-danger small">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">EPF Employer Rate (%)</label>
+                        <input type="number" step="0.1" min="0" class="form-control" wire:model="salary_epf_employer_rate">
+                        @error('salary_epf_employer_rate') <span class="text-danger small">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">ETF Employer Rate (%)</label>
+                        <input type="number" step="0.1" min="0" class="form-control" wire:model="salary_etf_rate">
+                        @error('salary_etf_rate') <span class="text-danger small">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button class="btn-custom" wire:click="saveSettings">
+                        <span wire:loading.remove wire:target="saveSettings">Save Settings</span>
+                        <span wire:loading wire:target="saveSettings">Saving...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        @endif
+    </div>
+
+    @push('scripts')
+    <script>
+        console.log('Production Settings Alert Script Loaded');
+        window.addEventListener('alert', event => {
+            console.log('Alert Event Received:', event.detail);
+            const data = event.detail;
+            const message = data.message || (Array.isArray(data) ? data[0].message : data.message);
+            const type = data.type || (Array.isArray(data) ? data[0].type : data.type);
+            
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: type || 'success',
+                title: message || 'Saved successfully',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+        });
+    </script>
+    @endpush
 </div>

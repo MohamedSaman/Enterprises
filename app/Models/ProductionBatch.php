@@ -20,6 +20,7 @@ class ProductionBatch extends Model
         'estimated_days',
         'target_qty',
         'planned_material_ton',
+        'allocated_breakdown',
         'completed_qty',
         'transferred_s_qty',
         'transferred_m_qty',
@@ -41,6 +42,7 @@ class ProductionBatch extends Model
         'transferred_m_qty' => 'integer',
         'transferred_l_qty' => 'integer',
         'transferred_to_inventory_at' => 'datetime',
+        'allocated_breakdown' => 'array',
     ];
 
     public function material()

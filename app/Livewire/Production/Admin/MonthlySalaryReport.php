@@ -20,7 +20,6 @@ class MonthlySalaryReport extends Component
     public $selectedYear = null;
     public $selectedMonth = null;
     public $selectedEmployee = null;
-    public $includeEpfEtf = false;
     public $salaryData = [];
     public $editingEmployees = [];
     public bool $salaryAlreadyExists = false;
@@ -69,12 +68,7 @@ class MonthlySalaryReport extends Component
         }
     }
 
-    public function updatedIncludeEpfEtf(): void
-    {
-        if ($this->selectedEmployee) {
-            $this->calculateSalary();
-        }
-    }
+
 
     private function loadSettings(): void
     {
@@ -92,6 +86,7 @@ class MonthlySalaryReport extends Component
             'production_salary_epf_employer_rate' => 12,
             'production_salary_supervisor_commission_multiplier' => 2,
             'production_salary_min_attendance_full_commission' => 20,
+            'production_salary_min_attendance_for_bonus' => 22,
         ];
 
         // Override with database settings if they exist
@@ -130,35 +125,100 @@ class MonthlySalaryReport extends Component
         $startDate = Carbon::createFromFormat('Y-m', "{$this->selectedYear}-{$this->selectedMonth}")->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
 
-        // Get attendance data
+
+        // 1. Paid Leave Calculation (Fill the gap between working days and attendance)
+        $workingDaysInMonth = (int) ($this->settings['production_salary_working_days_per_month'] ?? 25);
+        
+        // 2. Attendance Data Retrieval
         $attendanceRecords = Attendance::where('user_id', $employee->id)
-            ->whereBetween('date', [$startDate, $endDate])
-            ->where('status', 'present')
+            ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])
             ->get();
 
-        $attendanceDays = $attendanceRecords->count();
-        $workingDays = (int) $this->settings['production_salary_working_days_per_month'];
-        $paidLeaveDays = round((int) $this->settings['production_salary_paid_leave_days'] / 12, 1);
+        $presentRecords = $attendanceRecords->where('status', 'present');
+        $attendanceDays = $presentRecords->count();
+        $isEpfEligible = (bool) ($employee->detail->is_epf_eligible ?? true);
+        
+        // Missing days that could be covered by paid leave
+        $missingDays = max(0, $workingDaysInMonth - $attendanceDays);
 
-        // Adjust working days for paid leave
-        $effectiveWorkingDays = max($workingDays - $paidLeaveDays, 0);
+        $yearlyPaidLeaveQuota = (float) ($this->settings['production_salary_paid_leave_days'] ?? 14);
+        
+        // Count leaves taken earlier in the current year (explicitly marked as 'leave' in DB)
+        $leavesTakenBeforeThisMonth = Attendance::where('user_id', $employee->id)
+            ->whereYear('date', $this->selectedYear)
+            ->where('date', '<', $startDate->toDateString())
+            ->where('status', 'leave')
+            ->count();
+            
+        $remainingYearlyQuota = max($yearlyPaidLeaveQuota - $leavesTakenBeforeThisMonth, 0);
+        
+        // Apply paid leave to missing days
+        $paidLeavesInThisMonth = (int) min($missingDays, $remainingYearlyQuota);
+        $unpaidLeavesInThisMonth = $missingDays - $paidLeavesInThisMonth;
 
-        // Get basic salary
+        // 3. Working Hours & Hourly Rate Calculation
+        $hoursPerDay = (int) ($this->settings['production_salary_working_hours_per_day'] ?? 8);
+        $totalStandardHoursInMonth = $workingDaysInMonth * $hoursPerDay;
+        
         $basicSalary = (float) ($employee->detail->basic_salary ?? 0);
+        $hourlyRate = $totalStandardHoursInMonth > 0 ? ($basicSalary / $totalStandardHoursInMonth) : 0;
+        
+        $totalRegularHours = 0;
+        $totalOTHours = 0;
 
-        // Calculate attendance bonus
-        $attendanceBonus = $attendanceDays * (float) $this->settings['production_salary_attendance_bonus'];
+        foreach ($presentRecords as $record) {
+            $recordTotalHours = (float) $record->time_worked;
+            $calculatedOTHours = 0;
+
+            // Apply OT rule: Only if staying at least 30 mins after 5:00 PM
+            if ($record->check_out) {
+                try {
+                    $recordDate = Carbon::parse($record->date);
+                    $checkoutTime = Carbon::parse($record->check_out);
+                    $checkoutTime->setDate($recordDate->year, $recordDate->month, $recordDate->day);
+                    
+                    $fivePM = $recordDate->copy()->setTime(17, 0, 0);
+                    $fiveThirtyPM = $recordDate->copy()->setTime(17, 30, 0);
+
+                    if ($checkoutTime->greaterThanOrEqualTo($fiveThirtyPM)) {
+                        $calculatedOTHours = $checkoutTime->diffInMinutes($fivePM) / 60;
+                    }
+                } catch (\Exception $e) {
+                    $calculatedOTHours = (float) $record->over_time;
+                }
+            } else {
+                // Fallback to pre-calculated OT if checkout time is missing
+                $calculatedOTHours = (float) $record->over_time;
+            }
+
+            $totalOTHours += $calculatedOTHours;
+            $totalRegularHours += max(0, $recordTotalHours - $calculatedOTHours);
+        }
+
+        // totalRegularHours and totalOTHours are already calculated above in hours
+        
+        
+        // Paid leaves count as full working days (8 hours per day)
+        $paidLeaveHours = $paidLeavesInThisMonth * $hoursPerDay;
+        
+        // Basic salary is earned based on actual regular hours + paid leave hours
+        $earnedBasicSalary = ($totalRegularHours + $paidLeaveHours) * $hourlyRate;
+
+        // Calculate attendance bonus (Only based on actual presence)
+        $attendanceBonus = 0;
+        $minAttendanceForBonus = (int) ($this->settings['production_salary_min_attendance_for_bonus'] ?? 22);
+        if ($attendanceDays >= $minAttendanceForBonus) {
+            $attendanceBonus = (float) $this->settings['production_salary_attendance_bonus'];
+        }
 
         // Calculate commission
         $commission = $this->calculateCommission($employee, $startDate, $endDate, $attendanceDays);
 
-        // Calculate overtime
-        $overtimeHours = $attendanceRecords->sum('over_time');
-        $hourlyRate = $basicSalary / 160; // 160 hours per month (20 days * 8 hours)
-        $overtimeAmount = $overtimeHours * $hourlyRate * (float) $this->settings['production_salary_overtime_multiplier'];
+        // Calculate overtime amount
+        $overtimeAmount = $totalOTHours * $hourlyRate * (float) ($this->settings['production_salary_overtime_multiplier'] ?? 1.5);
 
         // Calculate gross salary
-        $grossSalary = $basicSalary + $attendanceBonus + $commission + $overtimeAmount;
+        $grossSalary = $earnedBasicSalary + $attendanceBonus + $commission + $overtimeAmount;
 
         // Calculate deductions (EPF/ETF should be based on basic salary only)
         $epfEmployee = 0;
@@ -166,7 +226,7 @@ class MonthlySalaryReport extends Component
         $etf = 0;
         $epfEtfBase = $basicSalary;
 
-        if ($this->includeEpfEtf) {
+        if ($isEpfEligible) {
             $epfEmployee = round($epfEtfBase * ((float) $this->settings['production_salary_epf_employee_rate'] / 100), 2);
             $epfEmployer = round($epfEtfBase * ((float) $this->settings['production_salary_epf_employer_rate'] / 100), 2);
             $etf = round($epfEtfBase * ((float) $this->settings['production_salary_etf_rate'] / 100), 2);
@@ -176,16 +236,20 @@ class MonthlySalaryReport extends Component
 
         $this->salaryData = [
             'employee_id' => $employee->id,
+            'employee_emp_id' => $employee->detail->user_id ?? 'N/A',
             'employee_name' => $employee->name,
             'employee_role' => $employee->detail->work_role ?? 'N/A',
-            'working_days' => $workingDays,
-            'paid_leave_days' => $paidLeaveDays,
-            'effective_working_days' => $effectiveWorkingDays,
+            'employee_phone' => $employee->phone ?? 'N/A',
+            'employee_email' => $employee->email ?? 'N/A',
+            'working_days' => $workingDaysInMonth,
+            'paid_leave_days' => $paidLeavesInThisMonth,
+            'unpaid_leave_days' => $unpaidLeavesInThisMonth,
             'attendance_days' => $attendanceDays,
             'basic_salary' => round($basicSalary, 2),
+            'earned_basic_salary' => round($earnedBasicSalary, 2),
             'attendance_bonus' => round($attendanceBonus, 2),
             'commission' => round($commission, 2),
-            'overtime_hours' => round($overtimeHours, 2),
+            'overtime_hours' => round($totalOTHours, 2),
             'overtime_amount' => round($overtimeAmount, 2),
             'gross_salary' => round($grossSalary, 2),
             'epf_employee' => $epfEmployee,
@@ -195,14 +259,25 @@ class MonthlySalaryReport extends Component
             'month_label' => $startDate->format('F Y'),
             'month' => $this->selectedMonth,
             'year' => $this->selectedYear,
+            'include_epf_etf' => $isEpfEligible,
+            'hourly_rate' => round($hourlyRate, 2),
+            'total_regular_hours' => round($totalRegularHours, 2),
         ];
     }
 
     private function calculateCommission($employee, $startDate, $endDate, $attendanceDays): float
     {
-        // Get all production batches that were active during this period
-        $batches = ProductionBatch::whereBetween('start_date', [$startDate, $endDate])
-            ->orWhereBetween('end_date', [$startDate, $endDate])
+        // Get batches that either started/ended in this month OR had daily production logged in this month
+        $activeBatchIds = ProductionBatchDay::whereBetween('work_date', [$startDate, $endDate])
+            ->pluck('production_batch_id')
+            ->unique()
+            ->toArray();
+
+        $batches = ProductionBatch::whereIn('id', $activeBatchIds)
+            ->orWhere(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('start_date', [$startDate, $endDate])
+                      ->orWhereBetween('end_date', [$startDate, $endDate]);
+            })
             ->get();
 
         $totalCommission = 0;
@@ -218,20 +293,28 @@ class MonthlySalaryReport extends Component
                 continue;
             }
 
-            // Get employee's attendance days in this batch period
-            $batchStart = $startDate->max($batch->start_date);
-            $batchEnd = $endDate->min($batch->end_date ?? $endDate);
+            // Get employee's attendance days in this batch period within the month
+            $batchStart = $startDate->max(Carbon::parse($batch->start_date));
+            $batchEnd = $endDate->min($batch->end_date ? Carbon::parse($batch->end_date) : $endDate);
 
             $employeeAttendanceInBatch = Attendance::where('user_id', $employee->id)
                 ->whereBetween('date', [$batchStart, $batchEnd])
                 ->where('status', 'present')
                 ->count();
 
-            // Get total produced items
-            $producedItems = (int) ($batch->completed_qty ?? $batch->target_qty);
+            // Get total produced items for this specific month
+            $producedItems = (int) ProductionBatchDay::where('production_batch_id', $batch->id)
+                ->whereBetween('work_date', [$startDate, $endDate])
+                ->sum('produced_qty');
+
+            // If no daily records exist, but the batch was fully contained in this month, use completed_qty as fallback
+            if ($producedItems === 0 && $batch->start_date >= $startDate && $batch->end_date && $batch->end_date <= $endDate) {
+                $producedItems = (int) ($batch->completed_qty ?? $batch->target_qty);
+            }
+
             $totalProducedItems += $producedItems;
 
-            // Get total attendance days for all team members in this batch
+            // Get total attendance days for all team members in this batch within the month
             $allStaffInBatch = [$batch->supervisor_id];
             $allStaffInBatch = array_merge($allStaffInBatch, $batch->staffMembers->pluck('id')->toArray());
 
@@ -244,8 +327,8 @@ class MonthlySalaryReport extends Component
                 $totalTeamAttendance += $staffAttendance;
             }
 
-            // Calculate batch commission
-            if ($totalTeamAttendance > 0) {
+            // Calculate batch commission based on this month's production
+            if ($totalTeamAttendance > 0 && $producedItems > 0) {
                 $batchCommission = $this->calculateBatchCommission($producedItems);
                 $dailyCommissionRate = $batchCommission / $totalTeamAttendance;
 
@@ -290,15 +373,21 @@ class MonthlySalaryReport extends Component
         }
 
         // Block duplicate salary generation for the same employee/month/year
-        $existingRecord = MonthlySalary::where('user_id', $this->selectedEmployee)
+        $existingRecord = MonthlySalary::withTrashed()
+            ->where('user_id', $this->selectedEmployee)
             ->where('month', $this->selectedMonth)
             ->where('year', $this->selectedYear)
             ->first();
 
         if ($existingRecord) {
-            $this->salaryAlreadyExists = true;
-            $this->dispatch('notify', type: 'error', message: 'Salary already exists for this employee in this month. Cannot generate again.');
-            return;
+            if ($existingRecord->trashed()) {
+                // If it was previously soft-deleted, completely remove it to allow re-generation
+                $existingRecord->forceDelete();
+            } else {
+                $this->salaryAlreadyExists = true;
+                $this->dispatch('notify', type: 'error', message: 'Salary already exists for this employee in this month. Cannot generate again.');
+                return;
+            }
         }
 
         MonthlySalary::updateOrCreate(
@@ -311,7 +400,7 @@ class MonthlySalaryReport extends Component
                 'working_days' => $this->salaryData['working_days'] ?? 0,
                 'attendance_days' => $this->salaryData['attendance_days'] ?? 0,
                 'paid_leave_days' => $this->salaryData['paid_leave_days'] ?? 0,
-                'basic_salary' => $this->salaryData['basic_salary'] ?? 0,
+                'basic_salary' => $this->salaryData['earned_basic_salary'] ?? 0,
                 'attendance_bonus' => $this->salaryData['attendance_bonus'] ?? 0,
                 'commission' => $this->salaryData['commission'] ?? 0,
                 'overtime_hours' => $this->salaryData['overtime_hours'] ?? 0,
@@ -321,7 +410,7 @@ class MonthlySalaryReport extends Component
                 'epf_employer' => $this->salaryData['epf_employer'] ?? 0,
                 'etf' => $this->salaryData['etf'] ?? 0,
                 'net_salary' => $this->salaryData['net_salary'] ?? 0,
-                'include_epf_etf' => $this->includeEpfEtf,
+                'include_epf_etf' => $this->salaryData['include_epf_etf'] ?? false,
                 'status' => 'generated',
             ]
         );
@@ -341,14 +430,26 @@ class MonthlySalaryReport extends Component
         }
     }
 
-    public function deleteSalary($salaryId): void
+    public $confirmingSalaryDeletion = null;
+
+    public function confirmDelete($salaryId): void
     {
-        $salary = MonthlySalary::find($salaryId);
-        if ($salary && $salary->status !== 'paid') {
-            $salary->delete();
-            $this->dispatch('notify', type: 'success', message: 'Salary deleted successfully!');
-        } else {
-            $this->dispatch('notify', type: 'error', message: 'Cannot delete paid salary records.');
+        $this->confirmingSalaryDeletion = $salaryId;
+        $this->dispatch('open-delete-modal');
+    }
+
+    public function deleteSalaryConfirmed(): void
+    {
+        if ($this->confirmingSalaryDeletion) {
+            $salary = MonthlySalary::find($this->confirmingSalaryDeletion);
+            if ($salary && $salary->status !== 'paid') {
+                $salary->forceDelete();
+                $this->dispatch('notify', type: 'success', message: 'Salary deleted successfully!');
+                $this->dispatch('close-delete-modal');
+            } else {
+                $this->dispatch('notify', type: 'error', message: 'Cannot delete paid salary records.');
+            }
+            $this->confirmingSalaryDeletion = null;
         }
     }
 
@@ -402,6 +503,14 @@ class MonthlySalaryReport extends Component
             ->with('user.detail')
             ->orderBy('created_at', 'desc')
             ->get();
+    }
+
+    public $selectedSalary = null;
+
+    public function viewPayslip($salaryId): void
+    {
+        $this->selectedSalary = MonthlySalary::with('user.detail')->find($salaryId);
+        $this->dispatch('open-payslip-modal');
     }
 
     public function render()

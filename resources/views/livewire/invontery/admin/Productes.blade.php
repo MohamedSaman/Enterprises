@@ -485,6 +485,62 @@
                 border-right: none;
             }
         }
+        /* Audit Status Cards */
+        .audit-summary-container {
+            display: flex;
+            gap: 15px;
+            background: #ffffff;
+            padding: 10px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .audit-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 60px;
+        }
+
+        .audit-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .audit-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .audit-value.total {
+            color: #4361ee;
+        }
+
+        .transfer-btn {
+            background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .transfer-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+            color: white;
+        }
     </style>
     @endpush
 
@@ -497,6 +553,30 @@
                         <i class="bi bi-box-seam text-success me-2"></i> Product Inventory Management
                     </h3>
                     <p class="text-muted mb-0">Manage your product catalog and inventory levels efficiently</p>
+                </div>
+
+                <div class="d-none d-xl-flex align-items-center gap-3">
+                    <div class="audit-summary-container">
+                        <div class="audit-stat border-end pe-3">
+                            <span class="audit-label">Ready to Transfer</span>
+                            <span class="audit-value total">{{ number_format($this->productionAuditSummary['total']) }}</span>
+                        </div>
+                        <div class="audit-stat">
+                            <span class="audit-label">S</span>
+                            <span class="audit-value">{{ number_format($this->productionAuditSummary['S']) }}</span>
+                        </div>
+                        <div class="audit-stat">
+                            <span class="audit-label">M</span>
+                            <span class="audit-value">{{ number_format($this->productionAuditSummary['M']) }}</span>
+                        </div>
+                        <div class="audit-stat">
+                            <span class="audit-label">L</span>
+                            <span class="audit-value">{{ number_format($this->productionAuditSummary['L']) }}</span>
+                        </div>
+                    </div>
+                    <a href="{{ route('production.admin.audit') }}" class="transfer-btn">
+                        <i class="bi bi-arrow-left-right"></i> Transfer Now
+                    </a>
                 </div>
             </div>
 

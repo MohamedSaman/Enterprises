@@ -39,6 +39,7 @@ class StaffManagement extends Component
     public string $view_joining_date = '';
     public string $view_staff_role = '';
     public string $view_status = '';
+    public bool $view_is_epf_eligible = true;
 
     public string $name = '';
     public string $email = '';
@@ -49,6 +50,7 @@ class StaffManagement extends Component
     public $basic_salary = null;
     public string $joining_date = '';
     public string $staff_role = 'worker';
+    public bool $is_epf_eligible = true;
 
     public function mount()
     {
@@ -81,6 +83,7 @@ class StaffManagement extends Component
         $this->view_joining_date = $staff->detail?->join_date?->format('Y-m-d') ?? '-';
         $this->view_staff_role = (string) ($staff->detail->work_role ?? '-');
         $this->view_status = (string) ($staff->detail->status ?? '-');
+        $this->view_is_epf_eligible = (bool) ($staff->detail->is_epf_eligible ?? true);
 
         $this->showViewModal = true;
     }
@@ -97,6 +100,7 @@ class StaffManagement extends Component
         $this->view_joining_date = '';
         $this->view_staff_role = '';
         $this->view_status = '';
+        $this->view_is_epf_eligible = true;
     }
 
     public function openEditModal(int $staffId): void
@@ -114,6 +118,7 @@ class StaffManagement extends Component
         $this->basic_salary = $staff->detail?->basic_salary ?? null;
         $this->joining_date = $staff->detail?->join_date?->format('Y-m-d') ?? now()->format('Y-m-d');
         $this->staff_role = (string) ($staff->detail->work_role ?? 'worker');
+        $this->is_epf_eligible = (bool) ($staff->detail->is_epf_eligible ?? true);
         $this->password = '';
         $this->showCreateModal = true;
     }
@@ -136,6 +141,7 @@ class StaffManagement extends Component
         $this->basic_salary = null;
         $this->joining_date = now()->format('Y-m-d');
         $this->staff_role = 'worker';
+        $this->is_epf_eligible = true;
         $this->resetErrorBag();
     }
 
@@ -164,6 +170,7 @@ class StaffManagement extends Component
             'basic_salary' => 'required|numeric|min:0',
             'joining_date' => 'required|date',
             'staff_role' => 'required|in:worker,supervisor,cleaner,oditer',
+            'is_epf_eligible' => 'required|boolean',
         ];
 
         $this->validate($rules);
@@ -192,6 +199,7 @@ class StaffManagement extends Component
             $detail->work_role = $this->staff_role;
             $detail->status = 'active';
             $detail->work_type = 'monthly';
+            $detail->is_epf_eligible = $this->is_epf_eligible;
             $detail->save();
         });
 

@@ -151,7 +151,7 @@
         }
 
         .progress {
-            height: 0.5rem;
+            height: 8px;
             margin-top: 5px;
             background-color: #e5e7eb;
             border-radius: 0.25rem;
@@ -160,7 +160,7 @@
 
         .progress-bar {
             background-color: #8a6114;
-            height: 4px;
+            height: 8px;
         }
 
         /* Stats progress bars */

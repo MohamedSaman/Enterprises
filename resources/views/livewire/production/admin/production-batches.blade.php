@@ -534,6 +534,119 @@
             font-weight: 600;
         }
 
+        /* Enhanced Worker Selection UI */
+        .worker-item-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.6rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .worker-item-card:hover {
+            border-color: #0284c7;
+            background: #f0f9ff;
+            transform: translateX(4px);
+        }
+
+        .worker-avatar {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #475569;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .worker-info {
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .worker-name {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.15rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .worker-meta {
+            font-size: 0.72rem;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .worker-badge {
+            padding: 0.1rem 0.4rem;
+            background: #f1f5f9;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+        }
+
+        .search-container-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .validation-notice {
+            background: #fff1f2;
+            border: 1px solid #fecade;
+            color: #be123c;
+            padding: 0.85rem 1.25rem;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(225, 29, 72, 0.05);
+        }
+
+        .nav-back-button {
+            background: #ffffff;
+            border: 1px solid #dbeafe;
+            color: #1e40af;
+            padding: 0.56rem 1.25rem;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .nav-back-button:hover {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
         @media (max-width: 991px) {
             .batch-modal-body {
                 padding: 1rem 1rem 1.25rem;
@@ -700,6 +813,9 @@
                                                                 {{ $availableBatch['purchase_batch_no'] }} | Remaining {{ number_format($availableBatch['remaining_quantity'], 3) }} ton
                                                             </option>
                                                             @endforeach
+                                                            @if($isEditMode && !collect($availableMaterialBatches ?? [])->contains('purchase_batch_no', $purchase_batch_no))
+                                                            <option value="{{ $purchase_batch_no }}">{{ $purchase_batch_no }} (Locked)</option>
+                                                            @endif
                                                         </select>
                                                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                                             @if(($availableMaterialBatches ?? collect())->isNotEmpty())
@@ -718,13 +834,21 @@
                                                 <div class="col-md-6 col-lg-4">
                                                     <div class="planning-field">
                                                         <div class="planning-field-head">
-                                                            <label class="form-label fw-bold mb-0">Selected Batch Stock (Ton)</label>
+                                                            <label class="form-label fw-bold mb-0">Allocated / Available (Ton)</label>
                                                         </div>
-                                                        <input type="number" class="form-control" value="{{ number_format($availableMaterialTon, 3, '.', '') }}" readonly>
-                                                        <div>
+                                                        @php
+                                                            $totalAllocated = array_sum(array_column($estimatedTargetBreakdown, 'allocated_ton'));
+                                                        @endphp
+                                                        <input type="number" class="form-control" value="{{ number_format($totalAllocated, 3, '.', '') }}" readonly>
+                                                        <div class="d-flex align-items-center gap-2 flex-wrap">
                                                             <span class="metric-pill {{ $availableMaterialTon <= 0 ? 'low' : '' }}">
                                                                 {{ $purchase_batch_no ? 'Batch: ' . $purchase_batch_no : 'Select a purchase batch' }}
                                                             </span>
+                                                            @if($purchase_batch_no && $totalAllocated < $availableMaterialTon)
+                                                            <span class="metric-pill" style="background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%); color: #a16207;">
+                                                                Remaining: {{ number_format($availableMaterialTon - $totalAllocated, 3) }} ton
+                                                            </span>
+                                                            @endif
                                                         </div>
                                                     </div>
                                                 </div>
@@ -732,14 +856,18 @@
                                                 <div class="col-12">
                                                     <div class="batch-summary-card">
                                                         <div class="batch-summary-title">Auto Production Target Breakdown</div>
+                                                        @php
+                                                            $totalAllocatedSummary = array_sum(array_column($estimatedTargetBreakdown, 'allocated_ton'));
+                                                            $totalAvailableSummary = array_sum(array_column($estimatedTargetBreakdown, 'available_ton'));
+                                                        @endphp
                                                         <div class="batch-summary-grid mb-3">
                                                             <div class="batch-summary-item">
                                                                 <div class="batch-summary-item-label">Purchase Batch</div>
                                                                 <div class="batch-summary-item-value">{{ $purchase_batch_no ?: '-' }}</div>
                                                             </div>
                                                             <div class="batch-summary-item">
-                                                                <div class="batch-summary-item-label">Total Stock</div>
-                                                                <div class="batch-summary-item-value">{{ number_format($availableMaterialTon, 3) }} ton</div>
+                                                                <div class="batch-summary-item-label">Allocated / Total</div>
+                                                                <div class="batch-summary-item-value">{{ number_format($totalAllocatedSummary, 3) }} / {{ number_format($totalAvailableSummary, 3) }} ton</div>
                                                             </div>
                                                             <div class="batch-summary-item">
                                                                 <div class="batch-summary-item-label">Estimated Total</div>
@@ -756,27 +884,48 @@
                                                                 <thead class="table-light">
                                                                     <tr>
                                                                         <th>Size</th>
-                                                                        <th class="text-end">Stock (Ton)</th>
+                                                                        <th class="text-end">Available (Ton)</th>
+                                                                        <th class="text-center" style="min-width: 140px;">Allocate (Ton)</th>
+                                                                        <th class="text-end">Remaining</th>
                                                                         <th class="text-end">Estimated Target</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
                                                                     @forelse($estimatedTargetBreakdown as $row)
+                                                                    @php
+                                                                        $remaining = ($row['available_ton'] ?? 0) - ($row['allocated_ton'] ?? 0);
+                                                                    @endphp
                                                                     <tr>
                                                                         <td class="fw-bold">{{ $row['size'] }}</td>
-                                                                        <td class="text-end">{{ number_format($row['ton'], 3) }}</td>
-                                                                        <td class="text-end fw-bold">{{ number_format($row['estimated']) }}</td>
+                                                                        <td class="text-end">{{ number_format($row['available_ton'], 3) }}</td>
+                                                                        <td class="text-center">
+                                                                            <input
+                                                                                type="number"
+                                                                                class="form-control form-control-sm text-center"
+                                                                                style="max-width: 120px; margin: 0 auto;"
+                                                                                step="0.001"
+                                                                                min="0"
+                                                                                max="{{ $row['available_ton'] }}"
+                                                                                wire:model.live.debounce.400ms="allocatedTonBreakdown.{{ $row['size'] }}"
+                                                                                placeholder="0.000">
+                                                                        </td>
+                                                                        <td class="text-end {{ $remaining > 0 ? 'text-warning' : '' }}">
+                                                                            {{ number_format($remaining, 3) }}
+                                                                        </td>
+                                                                        <td class="text-end fw-bold" style="background: rgba(220, 252, 231, 0.3);">{{ number_format($row['estimated']) }}</td>
                                                                     </tr>
                                                                     @empty
                                                                     <tr>
-                                                                        <td colspan="3" class="text-center text-muted">Select a purchase batch to see the breakdown.</td>
+                                                                        <td colspan="5" class="text-center text-muted">Select a purchase batch to see the breakdown.</td>
                                                                     </tr>
                                                                     @endforelse
                                                                 </tbody>
                                                                 <tfoot>
                                                                     <tr>
                                                                         <th>Total</th>
-                                                                        <th class="text-end">{{ number_format($availableMaterialTon, 3) }}</th>
+                                                                        <th class="text-end">{{ number_format($totalAvailableSummary, 3) }}</th>
+                                                                        <th class="text-center fw-bold" style="color: #0284c7;">{{ number_format($totalAllocatedSummary, 3) }}</th>
+                                                                        <th class="text-end">{{ number_format($totalAvailableSummary - $totalAllocatedSummary, 3) }}</th>
                                                                         <th class="text-end">{{ number_format($estimated_target_qty) }}</th>
                                                                     </tr>
                                                                 </tfoot>
@@ -848,78 +997,110 @@
                                     @php
                                     $selectedWorkers = $eligibleStaff->whereIn('id', array_map('intval', $staff_ids));
                                     @endphp
-                                    <div class="workers-panel mb-3">
-                                        <div class="row g-3 mb-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label fw-bold">Supervisor</label>
-                                                <select class="form-select" wire:model="supervisor_id">
-                                                    <option value="">Select Supervisor</option>
-                                                    @foreach($supervisors as $staff)
-                                                    <option value="{{ $staff->id }}">{{ $staff->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @error('supervisor_id') <span class="text-danger small">{{ $message }}</span> @enderror
-                                            </div>
-                                            <div class="col-md-6 d-flex align-items-end justify-content-md-end">
-                                                <label for="batch-tab-planning" class="btn btn-light border w-100 w-md-auto">Back: Batch Planning</label>
-                                            </div>
-                                        </div>
-
-                                        <label class="form-label fw-bold">{{ $isEditMode ? 'Manage Workers (Add/Remove)' : 'Select Workers (1 or more)' }}</label>
-                                        <div class="mb-2">
-                                            <input
-                                                type="text"
-                                                class="form-control"
-                                                placeholder="Type to search workers by name, phone, NIC, role"
-                                                wire:model.live="workerSearch">
-                                        </div>
-
-                                        <div class="border rounded p-2 bg-light-subtle" style="max-height: 220px; overflow-y: auto;">
-                                            @if(trim($workerSearch) === '')
-                                            <div class="text-muted small">Type a worker name to see search results below.</div>
-                                            @else
-                                            @forelse($filteredEligibleStaff as $staff)
-                                            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                                                <div>
-                                                    <div class="fw-semibold">{{ $staff->name }}</div>
-                                                    <div class="small text-muted">{{ $staff->email ?? $staff->contact ?? 'Worker' }}</div>
+                                    
+                                    <div class="search-container-box">
+                                        <div class="row g-3">
+                                            <div class="col-md-7">
+                                                <div class="planning-field">
+                                                    <label class="form-label fw-bold">Supervisor</label>
+                                                    <select class="form-select" wire:model="supervisor_id">
+                                                        <option value="">Select Supervisor</option>
+                                                        @foreach($supervisors as $staff)
+                                                        <option value="{{ $staff->id }}">{{ $staff->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('supervisor_id') <span class="text-danger small">{{ $message }}</span> @enderror
                                                 </div>
-                                                @if(in_array((int) $staff->id, array_map('intval', $staff_ids), true))
-                                                <button type="button" class="btn btn-sm btn-outline-danger" wire:click="removeWorker({{ $staff->id }})">Remove</button>
-                                                @else
-                                                <button type="button" class="btn btn-sm btn-outline-primary" wire:click="addWorker({{ $staff->id }})">Add</button>
-                                                @endif
                                             </div>
-                                            @empty
-                                            <div class="text-muted small">No workers found for your search.</div>
-                                            @endforelse
-                                            @endif
-                                        </div>
-
-                                        <div class="mt-3">
-                                            <div class="small fw-bold mb-2">Selected Workers</div>
-                                            <div class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
-                                                @forelse($selectedWorkers as $selectedWorker)
-                                                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                                                    <div>
-                                                        <div class="fw-semibold">{{ $selectedWorker->name }}</div>
-                                                        <div class="small text-muted">{{ $selectedWorker->email ?? $selectedWorker->contact ?? 'Worker' }}</div>
-                                                    </div>
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" wire:click="removeWorker({{ $selectedWorker->id }})">Remove</button>
-                                                </div>
-                                                @empty
-                                                <div class="text-muted small">No workers selected yet.</div>
-                                                @endforelse
+                                            <div class="col-md-5 d-flex align-items-end">
+                                                <label for="batch-tab-planning" class="nav-back-button">
+                                                    <i class="bi bi-arrow-left-circle"></i> Back to Batch Planning
+                                                </label>
                                             </div>
                                         </div>
-
-                                        <div class="small text-muted mt-2">Selected workers: {{ count($staff_ids) }}</div>
-                                        @error('staff_ids') <span class="text-danger small d-block">{{ $message }}</span> @enderror
                                     </div>
 
-                                    <div>
-                                        <label class="form-label fw-bold">Notes</label>
-                                        <textarea class="form-control" rows="4" wire:model="notes" placeholder="Optional notes"></textarea>
+                                    <div class="row g-4">
+                                        <div class="col-lg-6">
+                                            <label class="form-label fw-bold">{{ $isEditMode ? 'Add More Workers' : 'Find & Add Workers' }}</label>
+                                            <div class="mb-3">
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                                                    <input
+                                                        type="text"
+                                                        class="form-control border-start-0 ps-0"
+                                                        placeholder="Name, Phone, NIC..."
+                                                        wire:model.live="workerSearch">
+                                                </div>
+                                            </div>
+
+                                            <div class="border rounded-4 p-3 bg-light-subtle" style="height: 320px; overflow-y: auto; border-style: dashed !important;">
+                                                @if(trim($workerSearch) === '')
+                                                <div class="h-100 d-flex flex-column align-items-center justify-content-center text-center p-4">
+                                                    <i class="bi bi-person-plus text-muted" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                                                    <div class="text-muted small mt-2">Type a worker name to search</div>
+                                                </div>
+                                                @else
+                                                @forelse($filteredEligibleStaff as $staff)
+                                                <div class="worker-item-card">
+                                                    <div class="worker-avatar">{{ substr($staff->name, 0, 1) }}</div>
+                                                    <div class="worker-info">
+                                                        <div class="worker-name">{{ $staff->name }}</div>
+                                                        <div class="worker-meta">
+                                                            <span class="worker-badge">{{ $staff->detail->work_role ?? 'Staff' }}</span>
+                                                            <span>{{ $staff->contact ?: ($staff->email ?: 'No contact') }}</span>
+                                                        </div>
+                                                    </div>
+                                                    @if(in_array((int) $staff->id, array_map('intval', $staff_ids), true))
+                                                    <button type="button" class="btn btn-sm btn-light text-success fw-bold" disabled><i class="bi bi-check-lg"></i> Added</button>
+                                                    @else
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" wire:click="addWorker({{ $staff->id }})">Add</button>
+                                                    @endif
+                                                </div>
+                                                @empty
+                                                <div class="text-center py-5">
+                                                    <div class="text-muted small">No workers found.</div>
+                                                </div>
+                                                @endforelse
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        <div class="col-lg-6">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <label class="form-label fw-bold mb-0">Selected Workers ({{ count($staff_ids) }})</label>
+                                            </div>
+                                            
+                                            <div class="border rounded-4 p-3 bg-white shadow-sm" style="height: 320px; overflow-y: auto;">
+                                                @forelse($selectedWorkers as $selectedWorker)
+                                                <div class="worker-item-card">
+                                                    <div class="worker-avatar" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); color: #1e40af;">
+                                                        {{ substr($selectedWorker->name, 0, 1) }}
+                                                    </div>
+                                                    <div class="worker-info">
+                                                        <div class="worker-name">{{ $selectedWorker->name }}</div>
+                                                        <div class="worker-meta">
+                                                            <span>{{ $selectedWorker->contact ?: 'No contact' }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger border-0" wire:click="removeWorker({{ $selectedWorker->id }})">
+                                                        <i class="bi bi-x-circle"></i>
+                                                    </button>
+                                                </div>
+                                                @empty
+                                                <div class="h-100 d-flex flex-column align-items-center justify-content-center text-center p-4">
+                                                    <i class="bi bi-people text-muted" style="font-size: 2.5rem; opacity: 0.1;"></i>
+                                                    <div class="text-muted small mt-2">No workers selected yet.</div>
+                                                </div>
+                                                @endforelse
+                                            </div>
+                                            @error('staff_ids') <span class="text-danger small d-block mt-1">{{ $message }}</span> @enderror
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <label class="form-label fw-bold">Additional Notes</label>
+                                        <textarea class="form-control" rows="3" wire:model="notes" placeholder="Optional production notes..."></textarea>
                                         @error('notes') <span class="text-danger small">{{ $message }}</span> @enderror
                                     </div>
                                 </div>
@@ -939,8 +1120,8 @@
                     $missingItems[] = 'Purchase Batch';
                     }
 
-                    if ((float) $availableMaterialTon <= 0) {
-                        $missingItems[]='Available Stock' ;
+                    if ((float) ($planned_material_ton ?? 0) <= 0) {
+                        $missingItems[]='Allocated Stock' ;
                         }
 
                         if ((int) $estimated_days <=0) {
@@ -962,19 +1143,23 @@
                         if (count($staff_ids) <=0) {
                         $missingItems[]='Workers' ;
                         }
-
                         $canSubmitBatch=count($missingItems)===0;
                         @endphp
-                        <div class="w-100 mb-2">
+                        <div class="w-100">
                         @if(count($missingItems) > 0)
-                        <div class="small text-danger fw-semibold">
-                            Complete these fields before submit: {{ implode(', ', $missingItems) }}
+                        <div class="validation-notice">
+                            <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+                            <div>
+                                <div class="mb-1">Required fields missing:</div>
+                                <div class="small opacity-75">{{ implode(', ', $missingItems) }}</div>
+                            </div>
                         </div>
                         @endif
 
-                        @if($errors->any())
-                        <div class="small text-danger mt-1">
-                            {{ $errors->first() }}
+                        @if($errors->any() && count($missingItems) === 0)
+                        <div class="validation-notice" style="background: #fff7ed; border-color: #ffedd5; color: #9a3412;">
+                            <i class="bi bi-info-circle-fill mt-1"></i>
+                            <div>{{ $errors->first() }}</div>
                         </div>
                         @endif
                 </div>

@@ -30,6 +30,7 @@ class UserDetail extends Model
         'user_image',
         'description',
         'status',
+        'is_epf_eligible',
     ];
 
     // Cast JSON fields
@@ -37,6 +38,7 @@ class UserDetail extends Model
         'allowance' => 'array',
         'dob' => 'date',
         'join_date' => 'date',
+        'is_epf_eligible' => 'boolean',
     ];
 
     // Relationship: UserDetail belongs to a User

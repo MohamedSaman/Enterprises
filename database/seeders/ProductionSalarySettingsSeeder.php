@@ -73,6 +73,11 @@ class ProductionSalarySettingsSeeder extends Seeder
                 'value' => '20',
                 'description' => 'Minimum attendance days for full commission (below this gets half)',
             ],
+            [
+                'key' => 'production_salary_min_attendance_for_bonus',
+                'value' => '22',
+                'description' => 'Minimum attendance days required to receive the flat monthly attendance bonus',
+            ],
         ];
 
         foreach ($settings as $setting) {

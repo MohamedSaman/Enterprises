@@ -317,6 +317,50 @@
         .btn-delete:hover {
             background: #fecaca;
         }
+        .payslip-a4 {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm 20mm 50mm 20mm;
+            margin: 0 auto;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 11pt;
+            color: #1e293b;
+            background-color: #fff;
+            position: relative;
+            line-height: 1.5;
+        }
+        .payslip-a4 .text-sys { color: #0e7490; }
+        .payslip-a4 .bg-sys { background-color: #0e7490; color: #fff; }
+        .payslip-a4 .bg-gray { background-color: #f8fafc; }
+        
+        .payslip-a4 h1 { font-size: 24pt; font-weight: 800; margin: 0; letter-spacing: -0.025em; }
+        .payslip-a4 h2 { font-size: 14pt; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .payslip-a4 p { margin: 0; }
+        
+        .payslip-a4 .row-flex { display: flex; justify-content: space-between; gap: 30px; margin-bottom: 25px; }
+        .payslip-a4 .col-6 { width: 50%; }
+        
+        .payslip-a4 .section-box { border: 1px solid #e2e8f0; height: 100%; border-radius: 4px; overflow: hidden; }
+        .payslip-a4 .section-header { padding: 8px 12px; font-weight: 700; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.05em; }
+        .payslip-a4 .section-content { padding: 12px; }
+        
+        .payslip-a4 table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .payslip-a4 th, .payslip-a4 td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; }
+        .payslip-a4 th { text-align: left; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 700; background-color: #f8fafc; border-bottom: 2px solid #e2e8f0; }
+        
+        .payslip-a4 .text-right { text-align: right; }
+        .payslip-a4 .text-center { text-align: center; }
+        .payslip-a4 .font-bold { font-weight: 700; }
+        
+        .payslip-a4 .totals-row td { background-color: #f1f5f9; border-top: 2px solid #e2e8f0; font-weight: 700; color: #0f172a; }
+        .payslip-a4 .net-pay-box { margin-top: 30px; display: flex; justify-content: flex-end; }
+        .payslip-a4 .net-pay-content { padding: 15px 25px; border-radius: 4px; min-width: 250px; }
+        
+        .payslip-a4 .footer { position: absolute; bottom: 20mm; left: 20mm; right: 20mm; border-top: 1px solid #e2e8f0; padding-top: 15px; font-size: 9pt; color: #64748b; text-align: center; }
+        
+        .payslip-a4 .contribution-note { margin-top: 20px; padding: 12px; border-radius: 4px; border-left: 4px solid #0e7490; background-color: #f0f9ff; font-size: 9pt; }
+        @page { size: A4 portrait; margin: 0; }
 
         @media (max-width: 991px) {
             .stat-value {
@@ -388,6 +432,17 @@
             <h5 class="section-title mb-3">
                 <i class="bi bi-person-circle me-2"></i>{{ $salaryData['employee_name'] }}
                 <span class="badge bg-secondary ms-2">{{ $salaryData['employee_role'] }}</span>
+                <div class="d-flex align-items-end">
+                    @if($salaryData['include_epf_etf'])
+                        <div class="badge bg-success text-white p-2 w-100">
+                            <i class="bi bi-check-circle me-1"></i> EPF / ETF Calculation Active
+                        </div>
+                    @else
+                        <div class="badge bg-danger text-white p-2 w-100">
+                            <i class="bi bi-x-circle me-1"></i> EPF / ETF Not Applicable
+                        </div>
+                    @endif
+                </div>
             </h5>
 
             <div class="row g-2 mb-3">
@@ -407,23 +462,31 @@
                     <div class="stat-card">
                         <div class="stat-label">Paid Leave Days</div>
                         <div class="stat-value">{{ $salaryData['paid_leave_days'] }}</div>
+                        <div class="small text-muted mt-1">Quota: {{ (int)($settings['production_salary_paid_leave_days'] ?? 14) }} days/yr</div>
+                        @if(isset($salaryData['unpaid_leave_days']) && $salaryData['unpaid_leave_days'] > 0)
+                            <small class="text-danger fw-bold">+{{ $salaryData['unpaid_leave_days'] }} Unpaid</small>
+                        @endif
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="stat-card">
-                        <div class="stat-label">Basic Salary</div>
-                        <div class="stat-value">{{ number_format($salaryData['basic_salary'], 0) }}</div>
-                        <small class="text-muted fw-semibold">LKR</small>
+                        <div class="stat-label">Hours Worked</div>
+                        <div class="stat-value">{{ number_format($salaryData['total_regular_hours'], 1) }}</div>
+                        <small class="text-muted fw-semibold">Hrs</small>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="salary-highlight">
-                        <div class="small fw-bold text-muted mb-2">Include EPF / ETF Deductions</div>
-                        <div class="small text-muted mb-2">Calculated on basic salary only</div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" wire:model.live="includeEpfEtf">
-                            <span class="small fw-bold">{{ $includeEpfEtf ? 'Enabled' : 'Disabled' }}</span>
-                        </label>
+                <div class="col-md-2">
+                    <div class="stat-card">
+                        <div class="stat-label">Hourly Rate</div>
+                        <div class="stat-value">{{ number_format($salaryData['hourly_rate'], 2) }}</div>
+                        <small class="text-muted fw-semibold">LKR/Hr</small>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stat-card">
+                        <div class="stat-label">Net Basic</div>
+                        <div class="stat-value">{{ number_format($salaryData['earned_basic_salary'], 0) }}</div>
+                        <small class="text-muted fw-semibold">LKR</small>
                     </div>
                 </div>
             </div>
@@ -435,8 +498,8 @@
                     <div class="breakdown-panel">
                         <div class="info-grid">
                             <div class="info-item">
-                                <span class="info-label">Basic Salary</span>
-                                <span class="info-value">Rs. {{ number_format($salaryData['basic_salary'], 2) }}</span>
+                                <span class="info-label">Basic Salary ({{ number_format($salaryData['total_regular_hours'], 2) }} hrs)</span>
+                                <span class="info-value">Rs. {{ number_format($salaryData['earned_basic_salary'], 2) }}</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Attendance Bonus</span>
@@ -462,7 +525,7 @@
                     <h6 class="section-title mb-3"><i class="bi bi-cash-stack"></i>Deductions & Net Salary</h6>
                     <div class="breakdown-panel">
                         <div class="info-grid">
-                            @if($includeEpfEtf)
+                            @if($salaryData['include_epf_etf'])
                             <div class="info-item">
                                 <span class="info-label">EPF Employee ({{ $settings['production_salary_epf_employee_rate'] ?? 8 }}% of Basic)</span>
                                 <span class="info-value text-danger-custom">- Rs. {{ number_format($salaryData['epf_employee'], 2) }}</span>
@@ -491,31 +554,31 @@
                 Salary already exists for this employee in this year and month. Generation is disabled.
             </div>
             @endif
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="card-modern p-3 mb-3">
-            <div class="row g-2">
+            <!-- Action Buttons -->
+            <div class="row g-2 justify-content-end mt-2">
                 <div class="col-auto">
                     <button class="btn btn-gradient" wire:click="generateSalary" @disabled($salaryAlreadyExists || !$selectedEmployee || !$selectedMonth || !$selectedYear)>
                         <i class="bi bi-check-circle me-2"></i>Generate Salary
                     </button>
                 </div>
-                <div class="col-auto">
-                    <button class="btn btn-outline-secondary" onclick="window.print()">
-                        <i class="bi bi-printer me-2"></i>Print Preview
-                    </button>
-                </div>
             </div>
+        </div>
+
+       
         </div>
         @endif
 
-        <!-- Generated Salaries Table -->
-        <div class="card-modern p-3">
-            <h5 class="fw-bold mb-3">
-                <i class="bi bi-list-check me-2"></i>Generated Salaries for {{ isset($salaryData['month_label']) ? $salaryData['month_label'] : 'Selected Month' }}
-            </h5>
-
+        <!-- Generated Salaries List -->
+        <div class="card-modern">
+            <div class="card-header-modern d-flex justify-content-between align-items-center">
+                <div class="p-2">
+                    <h5 class="fw-bold fs-5">Generated Salaries List</h5>
+                    <small class="text-muted">Salaries generated for {{ date('F Y', strtotime("$selectedYear-$selectedMonth-01")) }}</small>
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="badge-status badge-generated fw-normal me-3">{{ $generatedSalaries->count() }} Generated</span>
+                </div>
+            </div>
             @if($generatedSalaries->count() > 0)
             <div class="table-responsive">
                 <table class="table salary-table">
@@ -547,16 +610,15 @@
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <button class="btn-sm-icon btn-edit"
-                                        wire:click="editSalary({{ $salary->id }})"
-                                        @if($salary->status === 'paid') disabled @endif
-                                        title="View/Edit">
-                                        <i class="bi bi-pencil"></i>
+                                    <button type="button" class="btn-sm-icon" style="background: #e0f2fe; color: #0284c7;"
+                                        wire:click="viewPayslip({{ $salary->id }})"
+                                        title="View Details">
+                                        <i class="bi bi-eye"></i>
                                     </button>
-                                    <button class="btn-sm-icon btn-delete"
-                                        wire:click="deleteSalary({{ $salary->id }})"
+
+                                    <button type="button" class="btn-sm-icon btn-delete"
+                                        wire:click="confirmDelete({{ $salary->id }})"
                                         @if($salary->status === 'paid') disabled @endif
-                                        onclick="confirm('Are you sure?') || event.stopImmediatePropagation()"
                                         title="Delete">
                                         <i class="bi bi-trash"></i>
                                     </button>
@@ -577,11 +639,239 @@
         </div>
     </div>
 
+    <!-- Hidden Print Preview Container -->
+    <div id="preview-payslip-content" style="display: none;">
+        <div class="payslip-a4">
+            <!-- Header -->
+        <div class="row-flex" style="align-items: center; border-bottom: 4px solid #0e7490; padding-bottom: 20px; margin-bottom: 30px;">
+            <div class="col-6">
+                <h1 class="text-sys">{{ config('shop.name', 'Company Name') }}</h1>
+                <div style="margin-top: 8px; color: #64748b; font-size: 10pt;">
+                    <p>{{ config('shop.address', '12345 Court Road, London W1T 1JY, UK') }}</p>
+                    <p>T: {{ config('shop.phone', '+44 00 0000 0000') }} | E: {{ config('shop.email', 'name@provider.com') }}</p>
+                </div>
+            </div>
+            <div class="col-6 text-right">
+                <h2 class="text-sys">PAYSLIP</h2>
+                <div style="margin-top: 8px; color: #64748b; font-size: 10pt;">
+                    <p>Reference: #PREVIEW</p>
+                    <p>Date: {{ now()->format('d M, Y') }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="row-flex">
+            <div class="col-6">
+                <div class="section-box">
+                    <div class="section-header bg-sys">Employee Details</div>
+                    <div class="section-content">
+                        <p class="font-bold" style="font-size: 12pt; margin-bottom: 4px;">{{ $salaryData['employee_name'] ?? 'N/A' }}</p>
+                        <p style="color: #64748b;">{{ $salaryData['employee_role'] ?? 'N/A' }}</p>
+                        <div style="margin-top: 12px; font-size: 10pt;">
+                            <p><strong>Employee ID:</strong> {{ $salaryData['employee_emp_id'] ?? 'N/A' }}</p>
+                            <p><strong>Contact:</strong> {{ $salaryData['employee_phone'] ?? 'N/A' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="section-box">
+                    <div class="section-header bg-sys">Payment Information</div>
+                    <div class="section-content">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 10pt;">
+                            <div>
+                                <p style="color: #64748b; font-size: 8pt; text-transform: uppercase;">Pay Period</p>
+                                <p class="font-bold">{{ $salaryData['month_label'] ?? 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p style="color: #64748b; font-size: 8pt; text-transform: uppercase;">Status</p>
+                                <p class="font-bold text-sys">PREVIEW</p>
+                            </div>
+                            <div>
+                                <p style="color: #64748b; font-size: 8pt; text-transform: uppercase;">Method</p>
+                                <p class="font-bold">Cash</p>
+                            </div>
+                            <div>
+                                <p style="color: #64748b; font-size: 8pt; text-transform: uppercase;">Attendance</p>
+                                <p class="font-bold">{{ $salaryData['attendance_days'] ?? 0 }} / {{ $salaryData['working_days'] ?? 0 }} Days</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Earnings Table -->
+        <div style="margin-top: 10px;">
+            <h2 style="font-size: 10pt; color: #0e7490; margin-bottom: 10px; border-left: 4px solid #0e7490; padding-left: 10px;">Earnings</h2>
+            <table class="main-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Description</th>
+                        <th class="text-center" style="width: 15%;">Units</th>
+                        <th class="text-right" style="width: 15%;">Rate</th>
+                        <th class="text-right" style="width: 20%;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="font-bold">Basic Salary</td>
+                        <td class="text-center">-</td>
+                        <td class="text-right">-</td>
+                        <td class="text-right font-bold">{{ number_format($salaryData['basic_salary'] ?? 0, 2) }}</td>
+                    </tr>
+                    @if(($salaryData['overtime_amount'] ?? 0) > 0)
+                    <tr>
+                        <td>Overtime Payment</td>
+                        <td class="text-center">{{ $salaryData['overtime_hours'] ?? 0 }} hrs</td>
+                        <td class="text-right">-</td>
+                        <td class="text-right">{{ number_format($salaryData['overtime_amount'] ?? 0, 2) }}</td>
+                    </tr>
+                    @endif
+                    @if(($salaryData['attendance_bonus'] ?? 0) > 0)
+                    <tr>
+                        <td>Attendance Bonus / Holiday Pay</td>
+                        <td class="text-center">{{ $salaryData['attendance_days'] ?? 0 }} days</td>
+                        <td class="text-right">-</td>
+                        <td class="text-right">{{ number_format($salaryData['attendance_bonus'] ?? 0, 2) }}</td>
+                    </tr>
+                    @endif
+                    @if(($salaryData['commission'] ?? 0) > 0)
+                    <tr>
+                        <td>Production Commission</td>
+                        <td class="text-center">-</td>
+                        <td class="text-right">-</td>
+                        <td class="text-right">{{ number_format($salaryData['commission'] ?? 0, 2) }}</td>
+                    </tr>
+                    @endif
+                    <tr class="totals-row">
+                        <td colspan="3" class="text-right">Total Gross Earnings</td>
+                        <td class="text-right text-sys">Rs. {{ number_format($salaryData['gross_salary'] ?? 0, 2) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Deductions Table -->
+        <div style="margin-top: 20px;">
+            <h2 style="font-size: 10pt; color: #ef4444; margin-bottom: 10px; border-left: 4px solid #ef4444; padding-left: 10px;">Deductions</h2>
+            <table class="main-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80%;">Description</th>
+                        <th class="text-right" style="width: 20%;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if(!empty($salaryData['include_epf_etf']))
+                    <tr>
+                        <td>EPF Contribution (Employee 8%)</td>
+                        <td class="text-right text-danger">{{ number_format($salaryData['epf_employee'] ?? 0, 2) }}</td>
+                    </tr>
+                    @endif
+                    @php
+                        $totalDeds = !empty($salaryData['include_epf_etf']) ? ($salaryData['epf_employee'] ?? 0) : 0;
+                    @endphp
+                    @if($totalDeds == 0)
+                    <tr>
+                        <td style="color: #94a3b8; font-style: italic;">No deductions for this period</td>
+                        <td class="text-right">0.00</td>
+                    </tr>
+                    @endif
+                    <tr class="totals-row">
+                        <td class="text-right">Total Deductions</td>
+                        <td class="text-right text-danger">Rs. {{ number_format($totalDeds, 2) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Net Pay -->
+        <div class="net-pay-box">
+            <div class="net-pay-content bg-sys">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 10pt; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.9;">Net Payable Salary</span>
+                    <span style="font-size: 18pt; font-weight: 800;">Rs. {{ number_format($salaryData['net_salary'] ?? 0, 2) }}</span>
+                </div>
+            </div>
+        </div>
+
+        @if(!empty($salaryData['include_epf_etf']))
+        <div class="contribution-note">
+            <p class="font-bold text-sys" style="margin-bottom: 4px;">Employer Contributions (Not deducted from salary)</p>
+            <p>EPF (12%): <strong>Rs. {{ number_format($salaryData['epf_employer'] ?? 0, 2) }}</strong> &nbsp;&bull;&nbsp; ETF (3%): <strong>Rs. {{ number_format($salaryData['etf'] ?? 0, 2) }}</strong></p>
+        </div>
+        @endif
+        </div>
+    </div>
+
+    <!-- Include Payslip Modal -->
+    <x-salary.payslip-modal :selectedSalary="$selectedSalary" />
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteSalaryModal" tabindex="-1" aria-labelledby="deleteSalaryModalLabel" aria-hidden="true" wire:ignore.self>
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 bg-light">
+                    <h5 class="modal-title text-danger fw-bold" id="deleteSalaryModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>Confirm Deletion
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <p class="fs-5 mb-1">Are you sure you want to delete this salary record?</p>
+                    <p class="text-muted small mb-0">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center bg-light">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger px-4" wire:click="deleteSalaryConfirmed">
+                        <span wire:loading.remove wire:target="deleteSalaryConfirmed">Yes, Delete</span>
+                        <span wire:loading wire:target="deleteSalaryConfirmed">Deleting...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification Script -->
     <script>
         document.addEventListener('notify', function(event) {
             // You can integrate with your notification system here
             console.log('Notification:', event.detail);
         });
+
+        // Listen for the event dispatched by the component
+        window.addEventListener('open-payslip-modal', event => {
+            var payslipModal = new bootstrap.Modal(document.getElementById('payslip-modal'));
+            payslipModal.show();
+        });
+
+        // Listen for delete modal events
+        window.addEventListener('open-delete-modal', event => {
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteSalaryModal'));
+            deleteModal.show();
+        });
+
+        window.addEventListener('close-delete-modal', event => {
+            var modalEl = document.getElementById('deleteSalaryModal');
+            var deleteModal = bootstrap.Modal.getInstance(modalEl);
+            if (deleteModal) {
+                deleteModal.hide();
+            }
+        });
+
+        // Function to print the preview slip
+        function printPreviewSlip() {
+            const content = document.getElementById('preview-payslip-content');
+            if (!content) return;
+            
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write('<html><head><title>Salary Payslip Preview</title>');
+            printWindow.document.write('</head><body onload="setTimeout(function(){ window.print(); window.close(); }, 200);">');
+            printWindow.document.write(content.innerHTML);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+        }
     </script>
 </div>

@@ -11,6 +11,7 @@
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 	@vite(['resources/css/app.css', 'resources/js/app.js'])
 	@livewireStyles
@@ -317,18 +318,19 @@
 
 		<div class="nav-center">
 			<a href="{{ route('production.admin.dashboard') }}" class="nav-item {{ request()->routeIs('production.admin.dashboard') ? 'active' : '' }}">Dashboard</a>
-			<div class="nav-dropdown {{ request()->routeIs(['production.admin.purchase-order', 'production.admin.grn', 'production.admin.suppliers']) ? 'active-parent' : '' }}">
+			<div class="nav-dropdown {{ request()->routeIs(['production.admin.purchase-order','production.admin.material-list', 'production.admin.grn', 'production.admin.suppliers']) ? 'active-parent' : '' }}">
 				<a href="#" class="nav-item">Purchases <i class="bi bi-chevron-down ms-1" style="font-size: 0.7rem"></i></a>
 				<div class="dropdown-content">
+					<a href="{{ route('production.admin.material-list') }}">Material List</a>
 					<a href="{{ route('production.admin.purchase-order') }}">Purchase List</a>
 					<a href="{{ route('production.admin.suppliers') }}">Supplier List</a>
-					<a href="{{ route('production.admin.grn') }}">GRN</a>
+					
 				</div>
 			</div>
-			<div class="nav-dropdown {{ request()->routeIs(['production.admin.material-list', 'production.admin.batches', 'production.admin.batch-details', 'production.admin.audit', 'production.admin.expenses']) ? 'active-parent' : '' }}">
+			<div class="nav-dropdown {{ request()->routeIs([ 'production.admin.batches', 'production.admin.batch-details', 'production.admin.audit', 'production.admin.expenses']) ? 'active-parent' : '' }}">
 				<a href="#" class="nav-item">Production <i class="bi bi-chevron-down ms-1" style="font-size: 0.7rem"></i></a>
 				<div class="dropdown-content">
-					<a href="{{ route('production.admin.material-list') }}">Material List</a>
+					
 					<a href="{{ route('production.admin.batches') }}">Production Batch</a>
 					<a href="{{ route('production.admin.audit') }}">Audit Transfer</a>
 					<a href="{{ route('production.admin.expenses') }}">Expenses</a>
@@ -337,7 +339,7 @@
 			<div class="nav-dropdown {{ request()->routeIs(['production.admin.salary', 'production.admin.monthly-salary', 'production.admin.staff']) ? 'active-parent' : '' }}">
 				<a href="#" class="nav-item">Salary <i class="bi bi-chevron-down ms-1" style="font-size: 0.7rem"></i></a>
 				<div class="dropdown-content">
-					<a href="{{ route('production.admin.salary') }}">Batch Salary Report</a>
+					
 					<a href="{{ route('production.admin.monthly-salary') }}">Monthly Salary</a>
 					<a href="{{ route('production.admin.staff') }}">Staff List</a>
 				</div>

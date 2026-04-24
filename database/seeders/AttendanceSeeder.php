@@ -21,7 +21,7 @@ class AttendanceSeeder extends Seeder
             return;
         }
 
-        $previousMonth = now()->subMonths(2)->startOfMonth();
+        $previousMonth = now()->subMonth()->startOfMonth();
         $endOfMonth = $previousMonth->copy()->endOfMonth();
 
         // Generate attendance records for the previous month

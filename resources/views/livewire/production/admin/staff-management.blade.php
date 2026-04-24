@@ -251,6 +251,16 @@
                             <input type="password" class="form-control" wire:model="password" placeholder="Password">
                             @error('password') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
+
+                        <div class="col-md-12">
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="epf_eligible_toggle" wire:model="is_epf_eligible">
+                                <label class="form-check-label fw-bold" for="epf_eligible_toggle">
+                                    Eligible for EPF / ETF Deductions
+                                </label>
+                            </div>
+                            <small class="text-muted">If enabled, EPF/ETF will be calculated automatically for this staff member every month.</small>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -303,6 +313,16 @@
                         <div class="detail-box">
                             <div class="detail-label">Basic Salary</div>
                             <div class="detail-value">${{ number_format((float) $view_basic_salary, 2) }}</div>
+                        </div>
+                        <div class="detail-box">
+                            <div class="detail-label">EPF / ETF Eligible</div>
+                            <div class="detail-value">
+                                @if($view_is_epf_eligible)
+                                    <span class="badge bg-success">Yes</span>
+                                @else
+                                    <span class="badge bg-secondary">No</span>
+                                @endif
+                            </div>
                         </div>
                         <div class="detail-box" style="grid-column: 1 / -1;">
                             <div class="detail-label">Address</div>
